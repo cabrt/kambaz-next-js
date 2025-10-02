@@ -11,7 +11,7 @@ export default function CourseNavigation({ cid }: { cid: string }) {
           Assignments</Link><br/>
       <Link href={`/Courses/${cid}/Quizzes`} id="wd-course-assignments-link">Quizzes</Link><br/>
       <Link href={`/Courses/${cid}/Grades`} id="wd-course-grades-link">Grades</Link><br/>
-      <Link href={`/Courses/${cid}/People/Table`} id="wd-course-people-link">People</Link><br/>
+      <Link href={`/Courses/${cid}/People`} id="wd-course-people-link">People</Link><br/>
     </div>
   );
 }
