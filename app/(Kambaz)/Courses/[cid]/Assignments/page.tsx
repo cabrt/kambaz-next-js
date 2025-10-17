@@ -1,11 +1,18 @@
+"use client";
+
 import { BsGripVertical, BsPlus } from "react-icons/bs";
 import { IoEllipsisVertical, IoSearch } from "react-icons/io5";
 import { FaCheckCircle } from "react-icons/fa";
 import { MdOutlineAssignment } from "react-icons/md";
-import { Button, Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Form, ListGroup, ListGroupItem } from "react-bootstrap";
+import { Button, Form, ListGroup, ListGroupItem } from "react-bootstrap";
+import { useParams } from "next/navigation";
 import Link from "next/link";
+import * as db from "../../../Database";
 
 export default function Assignments() {
+  const { cid } = useParams();
+  const assignments = db.assignments;
+
   return (
     <div id="wd-assignments">
       <div className="d-flex justify-content-end align-items-center mb-4">
@@ -36,77 +43,33 @@ export default function Assignments() {
           </div>
         </ListGroupItem>
 
-        <ListGroupItem className="p-3 ps-1 border-0" style={{ borderLeft: "4px solid green" }}>
-          <div className="d-flex align-items-start justify-content-between">
-            <div className="d-flex align-items-start w-100">
-              <BsGripVertical className="me-2 fs-3" />
-              <MdOutlineAssignment className="me-3 fs-4 text-success" />
-              <div className="flex-grow-1">
-                <Link href="/Courses/1234/Assignments/1" className="fw-bold text-dark text-decoration-none fs-5">
-                  A1
-                </Link>
-                <div className="text-muted small mt-1">
-                  <span className="text-danger">Multiple Modules</span> | <strong>Not available until</strong> May 6 at 12:00am | 
+        {assignments
+          .filter((assignment) => assignment.course === cid)
+          .map((assignment) => (
+            <ListGroupItem key={assignment._id} className="wd-lesson p-3 ps-1">
+              <div className="d-flex align-items-start justify-content-between">
+                <div className="d-flex align-items-start w-100">
+                  <BsGripVertical className="me-2 fs-3" />
+                  <MdOutlineAssignment className="me-3 fs-4 text-success" />
+                  <div className="flex-grow-1">
+                    <Link href={`/Courses/${cid}/Assignments/${assignment._id}`} className="fw-bold text-dark text-decoration-none fs-5">
+                      {assignment.title}
+                    </Link>
+                    <div className="text-muted small mt-1">
+                      <span className="text-danger">Multiple Modules</span> | <strong>Not available until</strong> May 6 at 12:00am | 
+                    </div>
+                    <div className="text-muted small">
+                      <strong>Due</strong> May 13 at 11:59pm | 100 pts
+                    </div>
+                  </div>
                 </div>
-                <div className="text-muted small">
-                  <strong>Due</strong> May 13 at 11:59pm | 100 pts
-                </div>
-              </div>
-            </div>
-            <div className="d-flex align-items-start ms-2">
-              <FaCheckCircle className="text-success me-2 fs-5" />
-              <IoEllipsisVertical className="fs-4" />
-            </div>
-          </div>
-        </ListGroupItem>
-
-        <ListGroupItem className="p-3 ps-1 border-0" style={{ borderLeft: "4px solid green" }}>
-          <div className="d-flex align-items-start justify-content-between">
-            <div className="d-flex align-items-start w-100">
-              <BsGripVertical className="me-2 fs-3" />
-              <MdOutlineAssignment className="me-3 fs-4 text-success" />
-              <div className="flex-grow-1">
-                <Link href="/Courses/1234/Assignments/2" className="fw-bold text-dark text-decoration-none fs-5">
-                  A2
-                </Link>
-                <div className="text-muted small mt-1">
-                  <span className="text-danger">Multiple Modules</span> | <strong>Not available until</strong> May 13 at 12:00am | 
-                </div>
-                <div className="text-muted small">
-                  <strong>Due</strong> May 20 at 11:59pm | 100 pts
+                <div className="d-flex align-items-start ms-2">
+                  <FaCheckCircle className="text-success me-2 fs-5" />
+                  <IoEllipsisVertical className="fs-4" />
                 </div>
               </div>
-            </div>
-            <div className="d-flex align-items-start ms-2">
-              <FaCheckCircle className="text-success me-2 fs-5" />
-              <IoEllipsisVertical className="fs-4" />
-            </div>
-          </div>
-        </ListGroupItem>
-
-        <ListGroupItem className="p-3 ps-1 border-0" style={{ borderLeft: "4px solid green" }}>
-          <div className="d-flex align-items-start justify-content-between">
-            <div className="d-flex align-items-start w-100">
-              <BsGripVertical className="me-2 fs-3" />
-              <MdOutlineAssignment className="me-3 fs-4 text-success" />
-              <div className="flex-grow-1">
-                <Link href="/Courses/1234/Assignments/3" className="fw-bold text-dark text-decoration-none fs-5">
-                  A3
-                </Link>
-                <div className="text-muted small mt-1">
-                  <span className="text-danger">Multiple Modules</span> | <strong>Not available until</strong> May 20 at 12:00am | 
-                </div>
-                <div className="text-muted small">
-                  <strong>Due</strong> May 27 at 11:59pm | 100 pts
-                </div>
-              </div>
-            </div>
-            <div className="d-flex align-items-start ms-2">
-              <FaCheckCircle className="text-success me-2 fs-5" />
-              <IoEllipsisVertical className="fs-4" />
-            </div>
-          </div>
-        </ListGroupItem>
+            </ListGroupItem>
+          ))}
       </ListGroup>
     </div>
   );

@@ -1,11 +1,27 @@
-import { Form, Button, Row, Col } from "react-bootstrap";
+"use client";
+
+import { Form, Row, Col } from "react-bootstrap";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import * as db from "../../../../Database";
 
 export default function AssignmentEditor() {
+  const { cid, aid } = useParams();
+  const assignment = db.assignments.find((a) => a._id === aid);
+
+  if (!assignment) {
+    return <div>Assignment not found</div>;
+  }
+
   return (
     <div id="wd-assignments-editor" className="container-fluid">
       <div className="mb-3">
         <Form.Label htmlFor="wd-name">Assignment Name</Form.Label>
-        <Form.Control id="wd-name" defaultValue="A1" />
+        <Form.Control 
+          id="wd-name" 
+          defaultValue={assignment.title}
+          key={`name-${assignment._id}`}
+        />
       </div>
 
       <div className="mb-3">
@@ -13,9 +29,8 @@ export default function AssignmentEditor() {
           as="textarea" 
           id="wd-description" 
           rows={10}
-          defaultValue={`The assignment is available online
-
-Submit a link to the landing page of your Web application...`}
+          defaultValue={assignment.description}
+          key={`desc-${assignment._id}`}
         />
       </div>
 
@@ -24,7 +39,11 @@ Submit a link to the landing page of your Web application...`}
           Points
         </Form.Label>
         <Col sm={9}>
-          <Form.Control id="wd-points" defaultValue={100} />
+          <Form.Control 
+            id="wd-points" 
+            defaultValue={assignment.points}
+            key={`points-${assignment._id}`}
+          />
         </Col>
       </Row>
 
@@ -122,7 +141,8 @@ Submit a link to the landing page of your Web application...`}
               <Form.Control 
                 type="datetime-local" 
                 id="wd-due-date" 
-                defaultValue="2024-05-13T23:59"
+                defaultValue={assignment.dueDate}
+                key={`due-${assignment._id}`}
               />
             </div>
 
@@ -133,7 +153,8 @@ Submit a link to the landing page of your Web application...`}
                   <Form.Control 
                     type="datetime-local" 
                     id="wd-available-from" 
-                    defaultValue="2024-05-06T00:00"
+                    defaultValue={assignment.availableDate}
+                    key={`available-${assignment._id}`}
                   />
                 </div>
               </Col>
@@ -154,8 +175,12 @@ Submit a link to the landing page of your Web application...`}
 
       <hr />
       <div className="d-flex justify-content-end mt-3">
-        <Button variant="secondary" className="me-2">Cancel</Button>
-        <Button variant="danger">Save</Button>
+        <Link href={`/Courses/${cid}/Assignments`} className="btn btn-secondary me-2">
+          Cancel
+        </Link>
+        <Link href={`/Courses/${cid}/Assignments`} className="btn btn-danger">
+          Save
+        </Link>
       </div>
     </div>
   );

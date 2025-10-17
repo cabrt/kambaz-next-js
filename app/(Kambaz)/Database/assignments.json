@@ -1,0 +1,218 @@
+[
+  {
+    "_id": "A101",
+    "title": "Propulsion Assignment",
+    "course": "RS101",
+    "description": "Analyze the propulsion process in a rocket engine. Include calculations for propellant mass and rocket performance.",
+    "points": 100,
+    "dueDate": "2024-05-13T23:59",
+    "availableDate": "2024-05-06T00:00"
+  },
+  {
+    "_id": "A102",
+    "title": "Combustion Analysis",
+    "course": "RS101",
+    "description": "Analyze the combustion process in a rocket engine. Include calculations for fuel efficiency and thrust output.",
+    "points": 100,
+    "dueDate": "2024-05-20T23:59",
+    "availableDate": "2024-05-13T00:00"
+  },
+  {
+    "_id": "A103",
+    "title": "Nozzle Design Project",
+    "course": "RS101",
+    "description": "Design an optimized nozzle for a specific rocket application. Include CAD drawings and performance calculations.",
+    "points": 150,
+    "dueDate": "2024-05-27T23:59",
+    "availableDate": "2024-05-20T00:00"
+  },
+  {
+    "_id": "A201",
+    "title": "Aerodynamics Quiz",
+    "course": "RS102",
+    "description": "Complete the online quiz covering fundamental aerodynamic principles and fluid dynamics.",
+    "points": 50,
+    "dueDate": "2024-05-13T23:59",
+    "availableDate": "2024-05-06T00:00"
+  },
+  {
+    "_id": "A202",
+    "title": "Flow Analysis",
+    "course": "RS102",
+    "description": "Perform a computational fluid dynamics analysis on an airfoil design. Submit your results and interpretation.",
+    "points": 100,
+    "dueDate": "2024-05-20T23:59",
+    "availableDate": "2024-05-13T00:00"
+  },
+  {
+    "_id": "A203",
+    "title": "Heating Analysis",
+    "course": "RS102",
+    "description": "Calculate heat loads during atmospheric re-entry for a given spacecraft. Design appropriate thermal protection.",
+    "points": 100,
+    "dueDate": "2024-05-27T23:59",
+    "availableDate": "2024-05-20T00:00"
+  },
+  {
+    "_id": "A301",
+    "title": "Structural Design Task",
+    "course": "RS103",
+    "description": "Design a spacecraft structure that meets specified load requirements. Include materials selection and justification.",
+    "points": 100,
+    "dueDate": "2024-05-13T23:59",
+    "availableDate": "2024-05-06T00:00"
+  },
+  {
+    "_id": "A302",
+    "title": "Orbital Calculations",
+    "course": "RS103",
+    "description": "Calculate the delta-V requirements for a mission to Mars. Include trajectory optimization and launch windows.",
+    "points": 100,
+    "dueDate": "2024-05-20T23:59",
+    "availableDate": "2024-05-13T00:00"
+  },
+  {
+    "_id": "A303",
+    "title": "Systems Engineering Exam",
+    "course": "RS103",
+    "description": "Comprehensive exam covering spacecraft systems including power, thermal control, and payload integration.",
+    "points": 150,
+    "dueDate": "2024-05-27T23:59",
+    "availableDate": "2024-05-20T00:00"
+  },
+  {
+    "_id": "A401",
+    "title": "Organic Synthesis Lab Report",
+    "course": "RS104",
+    "description": "Submit a detailed lab report of your organic synthesis experiment. Include reaction mechanisms and yield calculations.",
+    "points": 100,
+    "dueDate": "2024-05-13T23:59",
+    "availableDate": "2024-05-06T00:00"
+  },
+  {
+    "_id": "A402",
+    "title": "Spectroscopy Analysis",
+    "course": "RS104",
+    "description": "Analyze NMR and IR spectra to determine the structure of unknown organic compounds.",
+    "points": 100,
+    "dueDate": "2024-05-20T23:59",
+    "availableDate": "2024-05-13T00:00"
+  },
+  {
+    "_id": "A403",
+    "title": "Reaction Mechanisms Study",
+    "course": "RS104",
+    "description": "Propose and justify reaction mechanisms for given organic transformations. Include energy diagrams.",
+    "points": 100,
+    "dueDate": "2024-05-27T23:59",
+    "availableDate": "2024-05-20T00:00"
+  },
+  {
+    "_id": "A501",
+    "title": "Coordination Chemistry Essay",
+    "course": "RS105",
+    "description": "Write an essay on the role of coordination compounds in catalysis. Include real-world applications.",
+    "points": 100,
+    "dueDate": "2024-05-13T23:59",
+    "availableDate": "2024-05-06T00:00"
+  },
+  {
+    "_id": "A502",
+    "title": "Metal Complexes Lab",
+    "course": "RS105",
+    "description": "Synthesize and characterize a metal coordination complex. Submit lab report with spectroscopic data.",
+    "points": 100,
+    "dueDate": "2024-05-20T23:59",
+    "availableDate": "2024-05-13T00:00"
+  },
+  {
+    "_id": "A503",
+    "title": "Crystal Field Theory Problem Set",
+    "course": "RS105",
+    "description": "Complete problem set on crystal field theory. Include d-orbital splitting diagrams and magnetic properties.",
+    "points": 100,
+    "dueDate": "2024-05-27T23:59",
+    "availableDate": "2024-05-20T00:00"
+  },
+  {
+    "_id": "A601",
+    "title": "Thermodynamics Problem Set",
+    "course": "RS106",
+    "description": "Solve problems involving enthalpy, entropy, and Gibbs free energy. Show all work and calculations.",
+    "points": 100,
+    "dueDate": "2024-05-13T23:59",
+    "availableDate": "2024-05-06T00:00"
+  },
+  {
+    "_id": "A602",
+    "title": "Quantum Mechanics Quiz",
+    "course": "RS106",
+    "description": "Complete online quiz on quantum mechanical principles including wave functions and atomic orbitals.",
+    "points": 50,
+    "dueDate": "2024-05-20T23:59",
+    "availableDate": "2024-05-13T00:00"
+  },
+  {
+    "_id": "A603",
+    "title": "Spectroscopy Lab Report",
+    "course": "RS106",
+    "description": "Conduct spectroscopic analysis of chemical samples. Submit detailed lab report with data analysis.",
+    "points": 100,
+    "dueDate": "2024-05-27T23:59",
+    "availableDate": "2024-05-20T00:00"
+  },
+  {
+    "_id": "A701",
+    "title": "Elvish Translation Exercise",
+    "course": "RS107",
+    "description": "Translate provided texts from Sindarin to English and vice versa. Demonstrate understanding of grammar.",
+    "points": 100,
+    "dueDate": "2024-05-13T23:59",
+    "availableDate": "2024-05-06T00:00"
+  },
+  {
+    "_id": "A702",
+    "title": "Dwarvish Runes Analysis",
+    "course": "RS107",
+    "description": "Analyze and transcribe ancient Dwarvish runes from provided inscriptions. Include historical context.",
+    "points": 100,
+    "dueDate": "2024-05-20T23:59",
+    "availableDate": "2024-05-13T00:00"
+  },
+  {
+    "_id": "A703",
+    "title": "Comparative Linguistics Essay",
+    "course": "RS107",
+    "description": "Write an essay comparing the linguistic structures of Elvish and Dwarvish languages.",
+    "points": 100,
+    "dueDate": "2024-05-27T23:59",
+    "availableDate": "2024-05-20T00:00"
+  },
+  {
+    "_id": "A801",
+    "title": "Council of Elrond Analysis",
+    "course": "RS108",
+    "description": "Analyze the diplomatic strategies employed during the Council of Elrond. Discuss successes and challenges.",
+    "points": 100,
+    "dueDate": "2024-05-13T23:59",
+    "availableDate": "2024-05-06T00:00"
+  },
+  {
+    "_id": "A802",
+    "title": "Diplomatic Strategy Presentation",
+    "course": "RS108",
+    "description": "Prepare and deliver a presentation on inter-species diplomatic strategies in Middle-earth.",
+    "points": 100,
+    "dueDate": "2024-05-20T23:59",
+    "availableDate": "2024-05-13T00:00"
+  },
+  {
+    "_id": "A803",
+    "title": "War of the Ring Case Study",
+    "course": "RS108",
+    "description": "Conduct a case study analysis of diplomatic and military decisions during the War of the Ring.",
+    "points": 150,
+    "dueDate": "2024-05-27T23:59",
+    "availableDate": "2024-05-20T00:00"
+  }
+]
