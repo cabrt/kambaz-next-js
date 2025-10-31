@@ -5,23 +5,9 @@ import { Form, Row, Col, Button } from "react-bootstrap";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSelector, useDispatch } from "react-redux";
-import { addAssignment, updateAssignment } from "../../../Assignments/reducer";
-
-interface Assignment {
-  _id: string;
-  title: string;
-  course: string;
-  description: string;
-  points: number;
-  dueDate: string;
-  availableDate: string;
-  availableUntil?: string;
-}
+import { addAssignment } from "../../../../Assignments/reducer";
 
 interface RootState {
-  assignmentsReducer: {
-    assignments: Assignment[];
-  };
   accountReducer: {
     currentUser: {
       _id: string;
@@ -34,18 +20,13 @@ interface RootState {
   };
 }
 
-export default function AssignmentEditor() {
-  const params = useParams();
-  const cid = params.cid as string;
-  const aid = params.aid as string;
+export default function NewAssignmentEditor() {
+  const { cid } = useParams();
   const router = useRouter();
   const dispatch = useDispatch();
-  const { assignments } = useSelector((state: RootState) => state.assignmentsReducer);
   const { currentUser } = useSelector((state: RootState) => state.accountReducer);
   
   const isFaculty = currentUser?.role === "FACULTY";
-  const isNewAssignment = aid === "new";
-  const assignment = isNewAssignment ? null : assignments.find((a: Assignment) => a._id === aid);
   
   const [formData, setFormData] = useState({
     title: "",
@@ -57,81 +38,40 @@ export default function AssignmentEditor() {
   });
   
   useEffect(() => {
-    if (assignment) {
-      setFormData({
-        title: assignment.title,
-        description: assignment.description,
-        points: assignment.points,
-        dueDate: assignment.dueDate,
-        availableDate: assignment.availableDate,
-        availableUntil: assignment.availableUntil || ""
-      });
-    } else if (isNewAssignment) {
-      // Set default dates for new assignment
-      const now = new Date();
-      const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-      setFormData({
-        title: "New Assignment",
-        description: "",
-        points: 100,
-        dueDate: nextWeek.toISOString().slice(0, 16),
-        availableDate: now.toISOString().slice(0, 16),
-        availableUntil: nextWeek.toISOString().slice(0, 16)
-      });
-    }
-  }, [assignment, isNewAssignment]);
+    // Set default dates for new assignment
+    const now = new Date();
+    const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    setFormData({
+      title: "New Assignment",
+      description: "",
+      points: 100,
+      dueDate: nextWeek.toISOString().slice(0, 16),
+      availableDate: now.toISOString().slice(0, 16),
+      availableUntil: nextWeek.toISOString().slice(0, 16)
+    });
+  }, []);
   
   const handleSave = () => {
     if (!isFaculty) return;
     
-    if (isNewAssignment) {
-      // Create new assignment
-      dispatch(addAssignment({
-        title: formData.title,
-        course: cid,
-        description: formData.description,
-        points: formData.points,
-        dueDate: formData.dueDate,
-        availableDate: formData.availableDate,
-        ...(formData.availableUntil && { availableUntil: formData.availableUntil })
-      }));
-    } else if (assignment) {
-      // Update existing assignment
-      dispatch(updateAssignment({
-        ...assignment,
-        title: formData.title,
-        description: formData.description,
-        points: formData.points,
-        dueDate: formData.dueDate,
-        availableDate: formData.availableDate,
-        ...(formData.availableUntil && { availableUntil: formData.availableUntil })
-      }));
-    }
+    // Create new assignment
+    dispatch(addAssignment({
+      title: formData.title,
+      course: cid as string,
+      description: formData.description,
+      points: formData.points,
+      dueDate: formData.dueDate,
+      availableDate: formData.availableDate
+    }));
     router.push(`/Courses/${cid}/Assignments`);
   };
   
-  // Check faculty access first
   if (!isFaculty) {
     return (
       <div className="container-fluid">
         <div className="alert alert-warning">
           <h4>Access Denied</h4>
-          <p>Only faculty members can edit assignments.</p>
-          <Link href={`/Courses/${cid}/Assignments`} className="btn btn-primary">
-            Back to Assignments
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  // Check if assignment not found (but allow new assignments)
-  if (!isNewAssignment && !assignment) {
-    return (
-      <div className="container-fluid">
-        <div className="alert alert-danger">
-          <h4>Assignment Not Found</h4>
-          <p>The assignment you&apos;re looking for doesn&apos;t exist.</p>
+          <p>Only faculty members can create assignments.</p>
           <Link href={`/Courses/${cid}/Assignments`} className="btn btn-primary">
             Back to Assignments
           </Link>

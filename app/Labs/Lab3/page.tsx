@@ -1,3 +1,5 @@
+"use client";
+
 import VariablesAndConstants from "./VariablesAndConstants";
 import VariableTypes from "./VariableTypes";
 import BooleanVariables from "./BooleanVariables";
@@ -30,12 +32,41 @@ import Add from "./Add";
 import Square from "./Square";
 import Highlight from "./Highlight";
 import PathParameters from "./PathParameters";
+import { useSelector } from "react-redux";
+import store from "../store";
+import { Provider } from "react-redux";
 
-export default function Lab3() {
-  console.log('Hello World!');
+interface Todo {
+  id: string;
+  title: string;
+}
+
+interface RootState {
+  todosReducer: {
+    todos: Todo[];
+    todo: Todo;
+  };
+}
+
+function Lab3Content() {
+  const { todos } = useSelector((state: RootState) => state.todosReducer);
   return (
     <div id="wd-lab3" className="container">
       <h3>Lab 3</h3>
+      
+      {/* Redux Todos Display */}
+      <div className="card mb-4">
+        <div className="card-body">
+          <h4>Redux Todos (from Lab4)</h4>
+          <div className="list-group">
+            {todos.map((todo: Todo) => (
+              <div key={todo.id} className="list-group-item">
+                {todo.title}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
       <VariablesAndConstants />
       <VariableTypes />
       <BooleanVariables />
@@ -74,5 +105,14 @@ export default function Lab3() {
       </Highlight>
       <PathParameters />
     </div>
+  );
+}
+
+export default function Lab3() {
+  console.log('Hello World!');
+  return (
+    <Provider store={store}>
+      <Lab3Content />
+    </Provider>
   );
 }

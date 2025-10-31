@@ -17,17 +17,19 @@ interface RootState {
   };
 }
 
-export default function AccountPage() {
+export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { currentUser } = useSelector((state: RootState) => state.accountReducer);
   const router = useRouter();
   
   useEffect(() => {
-    if (currentUser) {
-      router.push("/Account/Profile");
-    } else {
+    if (!currentUser) {
       router.push("/Account/Signin");
     }
   }, [currentUser, router]);
   
-  return null; // Will redirect via useEffect
+  if (currentUser) {
+    return <>{children}</>;
+  } else {
+    return null; // Will redirect via useEffect
+  }
 }
