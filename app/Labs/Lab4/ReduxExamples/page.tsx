@@ -6,8 +6,6 @@ import AddRedux from "./AddRedux/page";
 import TodoList from "./todos/TodoList";
 
 export const dynamic = 'force-dynamic';
-export const dynamicParams = true;
-export const revalidate = 0;
 
 export default function ReduxExamples() {
   return(
