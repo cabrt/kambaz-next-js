@@ -13,6 +13,8 @@ import LessonControlButtons from "./LessonControlButtons";
 interface Lesson {
   _id: string;
   name: string;
+  description: string;
+  module: string;
 }
 
 interface Module {
