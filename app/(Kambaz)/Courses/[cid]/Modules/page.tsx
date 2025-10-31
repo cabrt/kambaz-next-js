@@ -41,7 +41,8 @@ interface RootState {
 
 
 export default function Modules() {
-  const { cid } = useParams();
+  const params = useParams();
+  const cid = params.cid as string;
   const [moduleName, setModuleName] = useState("");
   const { modules } = useSelector((state: RootState) => state.modulesReducer);
   const { currentUser } = useSelector((state: RootState) => state.accountReducer);
