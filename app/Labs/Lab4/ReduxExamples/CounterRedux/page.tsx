@@ -3,6 +3,8 @@
 import { useSelector, useDispatch } from "react-redux";
 import { increment, decrement } from "./counterReducer";
 
+export const dynamic = 'force-dynamic';
+
 interface RootState {
   counterReducer: {
     count: number;

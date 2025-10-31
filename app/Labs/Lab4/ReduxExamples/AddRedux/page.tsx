@@ -4,6 +4,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { useState } from "react";
 import { add } from "./addReducer";
 
+export const dynamic = 'force-dynamic';
+
 interface RootState {
   addReducer: {
     sum: number;

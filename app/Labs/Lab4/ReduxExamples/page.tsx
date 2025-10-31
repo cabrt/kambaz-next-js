@@ -5,6 +5,8 @@ import CounterRedux from "./CounterRedux/page";
 import AddRedux from "./AddRedux/page";
 import TodoList from "./todos/TodoList";
 
+export const dynamic = 'force-dynamic';
+
 export default function ReduxExamples() {
   return(
     <div>

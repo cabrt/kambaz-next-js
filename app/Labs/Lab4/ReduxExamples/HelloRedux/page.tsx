@@ -2,6 +2,8 @@
 
 import { useSelector } from "react-redux";
 
+export const dynamic = 'force-dynamic';
+
 interface RootState {
   helloReducer: {
     message: string;
