@@ -39,7 +39,7 @@ export default function WorkingWithObjectsAsynchronously() {
       <h4>Assignment</h4>
       <FormControl defaultValue={assignment.title} className="mb-2"
         onChange={(e) => setAssignment({ ...assignment, title: e.target.value })} />
-      <FormControl rows={3} defaultValue={assignment.description} className="mb-2"
+      <FormControl as="textarea" rows={3} defaultValue={assignment.description} className="mb-2"
         onChange={(e) => setAssignment({ ...assignment, description: e.target.value })}/>
       <FormControl type="date" className="mb-2" defaultValue={assignment.due}
         onChange={(e) => setAssignment({ ...assignment, due: e.target.value })} />
