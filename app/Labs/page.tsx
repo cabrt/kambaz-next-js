@@ -8,10 +8,10 @@ export default function Labs() {
   return (
     <Provider store={store}>
       <div className="container-fluid">
-        <h1>Labs</h1>
-        <h2>Conor Abramson-Tieu</h2>
+      <h1>Labs</h1>
+      <h2>Conor Abramson-Tieu</h2>
         <TOC />
-      </div>
+    </div>
     </Provider>
   );
 }

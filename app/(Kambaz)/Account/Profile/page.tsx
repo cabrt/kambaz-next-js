@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Form, Button } from "react-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
 import { setCurrentUser } from "../reducer";
+import * as client from "../client";
 
 interface RootState {
   accountReducer: {
@@ -43,7 +44,14 @@ export default function Profile() {
     setProfile(currentUser);
   }, [currentUser, router]);
   
-  const signout = () => {
+  const updateProfile = async () => {
+    if (!profile) return;
+    const updatedProfile = await client.updateUser(profile);
+    dispatch(setCurrentUser(updatedProfile));
+  };
+
+  const signout = async () => {
+    await client.signout();
     dispatch(setCurrentUser(null));
     router.push("/Account/Signin");
   };
@@ -107,6 +115,14 @@ export default function Profile() {
             <option value="FACULTY">Faculty</option>
             <option value="STUDENT">Student</option>
           </Form.Select>
+          <Button 
+            onClick={updateProfile} 
+            className="w-100 mb-2" 
+            id="wd-update-btn"
+            variant="primary"
+          >
+            Update
+          </Button>
           <Button 
             onClick={signout} 
             className="w-100 mb-2" 

@@ -1,17 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { BsGripVertical, BsPlus } from "react-icons/bs";
-import { IoEllipsisVertical, IoSearch } from "react-icons/io5";
-import { FaCheckCircle, FaTrash } from "react-icons/fa";
-import { FaPencil } from "react-icons/fa6";
-import { MdOutlineAssignment } from "react-icons/md";
-import { Button, Form, ListGroup, ListGroupItem, Modal } from "react-bootstrap";
-import { useParams } from "next/navigation";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
+import { Button, ListGroup, ListGroupItem, Modal, Form } from "react-bootstrap";
+import { BsPlus, BsGripVertical } from "react-icons/bs";
+import { FaTrash, FaPencil } from "react-icons/fa6";
+import { IoSearch } from "react-icons/io5";
 import { useSelector, useDispatch } from "react-redux";
-import { useRouter } from "next/navigation";
-import { deleteAssignment } from "../../Assignments/reducer";
+import { setAssignments, deleteAssignment } from "../../Assignments/reducer";
+import * as assignmentsClient from "./client";
 
 interface Assignment {
   _id: string;
@@ -22,7 +20,6 @@ interface Assignment {
   dueDate: string;
   availableDate: string;
   availableUntil?: string;
-  editing?: boolean;
 }
 
 interface RootState {
@@ -43,29 +40,37 @@ interface RootState {
 
 export default function Assignments() {
   const { cid } = useParams();
-  const router = useRouter();
   const { assignments } = useSelector((state: RootState) => state.assignmentsReducer);
   const { currentUser } = useSelector((state: RootState) => state.accountReducer);
   const dispatch = useDispatch();
-  
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [assignmentToDelete, setAssignmentToDelete] = useState<string | null>(null);
-  
+
   const isFaculty = currentUser?.role === "FACULTY";
-  
+
+  const fetchAssignments = useCallback(async () => {
+    const assignments = await assignmentsClient.findAssignmentsForCourse(cid as string);
+    dispatch(setAssignments(assignments));
+  }, [cid, dispatch]);
+
+  useEffect(() => {
+    fetchAssignments();
+  }, [fetchAssignments]);
+
   const handleDeleteClick = (assignmentId: string) => {
     setAssignmentToDelete(assignmentId);
     setShowDeleteDialog(true);
   };
-  
-  const handleConfirmDelete = () => {
+
+  const handleConfirmDelete = async () => {
     if (assignmentToDelete) {
+      await assignmentsClient.deleteAssignment(assignmentToDelete);
       dispatch(deleteAssignment(assignmentToDelete));
+      setShowDeleteDialog(false);
+      setAssignmentToDelete(null);
     }
-    setShowDeleteDialog(false);
-    setAssignmentToDelete(null);
   };
-  
+
   const handleCancelDelete = () => {
     setShowDeleteDialog(false);
     setAssignmentToDelete(null);
@@ -92,72 +97,48 @@ export default function Assignments() {
         )}
       </div>
 
-      <ListGroup className="rounded-0">
-        <ListGroupItem className="p-3 ps-2 bg-secondary border-0">
-          <div className="d-flex align-items-center justify-content-between">
+      <ListGroup id="wd-assignments" className="rounded-0">
+        {assignments.map((assignment: Assignment) => (
+          <ListGroupItem key={assignment._id} className="wd-lesson p-3 ps-1">
             <div className="d-flex align-items-center">
               <BsGripVertical className="me-2 fs-3" />
-              <span className="fw-bold">▼ ASSIGNMENTS</span>
-            </div>
-            <div className="d-flex align-items-center">
-              <span className="border border-dark rounded-pill px-3 py-1 me-2 fs-6">40% of Total</span>
-              <BsPlus className="fs-4 me-2" />
-              <IoEllipsisVertical className="fs-4" />
-            </div>
-          </div>
-        </ListGroupItem>
-
-        {assignments
-          .filter((assignment: Assignment) => assignment.course === cid)
-          .map((assignment: Assignment) => (
-            <ListGroupItem key={assignment._id} className="wd-lesson p-3 ps-1">
-              <div className="d-flex align-items-start justify-content-between">
-                <div className="d-flex align-items-start w-100">
-                  <BsGripVertical className="me-2 fs-3" />
-                  <MdOutlineAssignment className="me-3 fs-4 text-success" />
-                  <div className="flex-grow-1">
-                    <Link href={`/Courses/${cid}/Assignments/${assignment._id}/Editor`} className="fw-bold text-dark text-decoration-none fs-5">
-                      {assignment.title}
-                    </Link>
-                    <div className="text-muted small mt-1">
-                      <span className="text-danger">Multiple Modules</span> | <strong>Not available until</strong> {new Date(assignment.availableDate).toLocaleDateString()} at 12:00am | 
-                    </div>
-                    <div className="text-muted small">
-                      <strong>Due</strong> {new Date(assignment.dueDate).toLocaleDateString()} at 11:59pm | {assignment.points} pts
-                    </div>
-                  </div>
+              <div className="flex-grow-1">
+                <Link
+                  className="wd-assignment-link text-decoration-none text-dark fw-bold"
+                  href={`/Courses/${cid}/Assignments/${assignment._id}/Editor`}
+                >
+                  {assignment.title}
+                </Link>
+                <div className="text-muted">
+                  <span className="text-danger">Multiple Modules</span> |{" "}
+                  <strong>Not available until</strong> {assignment.availableDate} |
                 </div>
-                <div className="d-flex align-items-start ms-2">
-                  <FaCheckCircle className="text-success me-2 fs-5" />
-                  {isFaculty && (
-                    <>
-                      <FaPencil 
-                        className="text-primary me-2 fs-5" 
-                        onClick={() => router.push(`/Courses/${cid}/Assignments/${assignment._id}/Editor`)}
-                        style={{ cursor: 'pointer' }}
-                      />
-                      <FaTrash 
-                        className="text-danger me-2 fs-5" 
-                        onClick={() => handleDeleteClick(assignment._id)}
-                        style={{ cursor: 'pointer' }}
-                      />
-                    </>
-                  )}
-                  <IoEllipsisVertical className="fs-4" />
+                <div className="text-muted">
+                  <strong>Due</strong> {assignment.dueDate} | {assignment.points} pts
                 </div>
               </div>
-            </ListGroupItem>
-          ))}
+              {isFaculty && (
+                <div className="d-flex align-items-center">
+                  <FaTrash
+                    className="me-3 text-danger"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => handleDeleteClick(assignment._id)}
+                  />
+                  <Link href={`/Courses/${cid}/Assignments/${assignment._id}/Editor`}>
+                    <FaPencil className="text-primary" style={{ cursor: "pointer" }} />
+                  </Link>
+                </div>
+              )}
+            </div>
+          </ListGroupItem>
+        ))}
       </ListGroup>
 
-      {/* Delete Confirmation Dialog */}
-      <Modal show={showDeleteDialog} onHide={handleCancelDelete} centered>
+      <Modal show={showDeleteDialog} onHide={handleCancelDelete}>
         <Modal.Header closeButton>
-          <Modal.Title>Delete Assignment</Modal.Title>
+          <Modal.Title>Confirm Delete</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to remove this assignment?
-        </Modal.Body>
+        <Modal.Body>Are you sure you want to delete this assignment?</Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCancelDelete}>
             Cancel

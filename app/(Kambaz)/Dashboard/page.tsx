@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Row, Col, Card, CardImg, CardBody, CardTitle, CardText, Button, FormControl } from "react-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
-import { addCourse, deleteCourse, updateCourse } from "../Courses/reducer";
-import { enrollUserInCourse, unenrollUserFromCourse } from "../Enrollments/reducer";
+import { addCourse, deleteCourse, updateCourse, setCourses } from "../Courses/reducer";
+import { enrollUserInCourse, unenrollUserFromCourse, setEnrollments } from "../Enrollments/reducer";
 import ProtectedRoute from "../Account/ProtectedRoute";
+import * as userClient from "../Account/client";
+import * as courseClient from "../Courses/client";
+import * as enrollmentClient from "../Enrollments/client";
 
 interface Enrollment {
   _id: string;
@@ -65,6 +68,56 @@ function DashboardContent() {
   
   const isFaculty = currentUser?.role === "FACULTY";
   
+  const fetchCourses = useCallback(async () => {
+    try {
+      if (showAllCourses) {
+        const courses = await courseClient.fetchAllCourses();
+        dispatch(setCourses(courses));
+      } else {
+        const courses = await userClient.findMyCourses();
+        dispatch(setCourses(courses));
+      }
+    } catch (error: unknown) {
+      // 401 is expected when no user is logged in, handle silently
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as { response?: { status?: number } };
+        if (axiosError.response?.status !== 401) {
+          console.error(error);
+        }
+      } else {
+        console.error(error);
+      }
+      // Set courses to empty array if fetch fails
+      dispatch(setCourses([]));
+    }
+  }, [showAllCourses, dispatch]);
+
+  const fetchEnrollments = useCallback(async () => {
+    try {
+      const enrollments = await enrollmentClient.findMyEnrollments();
+      dispatch(setEnrollments(enrollments));
+    } catch (error: unknown) {
+      // 401 is expected when no user is logged in, handle silently
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as { response?: { status?: number } };
+        if (axiosError.response?.status !== 401) {
+          console.error(error);
+        }
+      } else {
+        console.error(error);
+      }
+      // Set enrollments to empty array if fetch fails
+      dispatch(setEnrollments([]));
+    }
+  }, [dispatch]);
+  
+  useEffect(() => {
+    if (currentUser) {
+      fetchCourses();
+      fetchEnrollments();
+    }
+  }, [currentUser, fetchCourses, fetchEnrollments]);
+  
   const isEnrolled = (courseId: string) => {
     if (!currentUser) return false;
     return enrollments.some(
@@ -72,44 +125,103 @@ function DashboardContent() {
     );
   };
   
-  const handleEnroll = (courseId: string) => {
+  const handleEnroll = async (courseId: string) => {
     if (currentUser) {
-      dispatch(enrollUserInCourse({ userId: currentUser._id, courseId }));
+      try {
+        // Optimistically update UI
+        dispatch(enrollUserInCourse({ userId: currentUser._id, courseId }));
+        
+        // Save to server
+        await enrollmentClient.enrollUserInCourse(currentUser._id, courseId);
+        
+        // Refresh data from server to ensure consistency
+        await fetchEnrollments();
+        if (!showAllCourses) {
+          await fetchCourses();
+        }
+      } catch (error) {
+        console.error("Failed to enroll:", error);
+        // Revert optimistic update on error
+        dispatch(unenrollUserFromCourse({ userId: currentUser._id, courseId }));
+      }
     }
   };
   
-  const handleUnenroll = (courseId: string) => {
+  const handleUnenroll = async (courseId: string) => {
     if (currentUser) {
-      dispatch(unenrollUserFromCourse({ userId: currentUser._id, courseId }));
+      try {
+        // Optimistically update UI
+        dispatch(unenrollUserFromCourse({ userId: currentUser._id, courseId }));
+        
+        // Save to server
+        await enrollmentClient.unenrollUserFromCourse(currentUser._id, courseId);
+        
+        // Refresh data from server to ensure consistency
+        await fetchEnrollments();
+        if (!showAllCourses) {
+          await fetchCourses();
+        }
+      } catch (error) {
+        console.error("Failed to unenroll:", error);
+        // Revert optimistic update on error
+        dispatch(enrollUserInCourse({ userId: currentUser._id, courseId }));
+      }
     }
   };
   
-  const addNewCourse = () => {
-    dispatch(addCourse(course));
-    // Reset form
-    setCourse({
-      _id: "0",
-      name: "New Course",
-      number: "New Number",
-      startDate: "2023-09-10",
-      endDate: "2023-12-15",
-      image: "/images/reactjs.jpg",
-      description: "New Description"
-    });
+  const addNewCourse = async () => {
+    try {
+      const newCourse = await userClient.createCourse(course);
+      dispatch(addCourse(newCourse));
+      // Also add to enrollments since server enrolled us
+      if (currentUser) {
+        dispatch(enrollUserInCourse({ userId: currentUser._id, courseId: newCourse._id }));
+      }
+      // Refresh courses and enrollments from server
+      await fetchEnrollments();
+      await fetchCourses();
+      // Reset form
+      setCourse({
+        _id: "0",
+        name: "New Course",
+        number: "New Number",
+        startDate: "2023-09-10",
+        endDate: "2023-12-15",
+        image: "/images/reactjs.jpg",
+        description: "New Description"
+      });
+    } catch (error) {
+      console.error("Failed to create course:", error);
+    }
   };
   
-  const handleDeleteCourse = (courseId: string) => {
-    dispatch(deleteCourse(courseId));
+  const handleDeleteCourse = async (courseId: string) => {
+    try {
+      await courseClient.deleteCourse(courseId);
+      dispatch(deleteCourse(courseId));
+      // Refresh enrollments and courses from server
+      await fetchEnrollments();
+      await fetchCourses();
+    } catch (error) {
+      console.error("Failed to delete course:", error);
+    }
   };
   
-  const handleUpdateCourse = () => {
-    dispatch(updateCourse(course));
+  const handleUpdateCourse = async () => {
+    try {
+      await courseClient.updateCourse(course);
+      dispatch(updateCourse(course));
+      // Refresh courses from server
+      await fetchCourses();
+    } catch (error) {
+      console.error("Failed to update course:", error);
+    }
   };
   
   // Filter courses based on showAllCourses toggle
-  const filteredCourses = showAllCourses
-    ? courses
-    : courses.filter((course) => isEnrolled(course._id));
+  // When showAllCourses is false, we show enrolled courses (which is what the server returns)
+  // When showAllCourses is true, we need to fetch all courses
+  const filteredCourses = courses;
 
   return (
     <div id="wd-dashboard">

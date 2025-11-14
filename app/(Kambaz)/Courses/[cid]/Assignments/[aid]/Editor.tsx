@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Form, Row, Col, Button } from "react-bootstrap";
+import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import { Form, Button, Alert } from "react-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
 import { addAssignment, updateAssignment } from "../../../Assignments/reducer";
+import * as assignmentsClient from "../client";
 
 interface Assignment {
   _id: string;
@@ -40,13 +40,14 @@ export default function AssignmentEditor() {
   const aid = params.aid as string;
   const router = useRouter();
   const dispatch = useDispatch();
+  
   const { assignments } = useSelector((state: RootState) => state.assignmentsReducer);
   const { currentUser } = useSelector((state: RootState) => state.accountReducer);
-  
+
   const isFaculty = currentUser?.role === "FACULTY";
   const isNewAssignment = aid === "new";
   const assignment = isNewAssignment ? null : assignments.find((a: Assignment) => a._id === aid);
-  
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -55,7 +56,7 @@ export default function AssignmentEditor() {
     availableDate: "",
     availableUntil: ""
   });
-  
+
   useEffect(() => {
     if (assignment) {
       setFormData({
@@ -67,7 +68,6 @@ export default function AssignmentEditor() {
         availableUntil: assignment.availableUntil || ""
       });
     } else if (isNewAssignment) {
-      // Set default dates for new assignment
       const now = new Date();
       const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
       setFormData({
@@ -80,240 +80,119 @@ export default function AssignmentEditor() {
       });
     }
   }, [assignment, isNewAssignment]);
-  
-  const handleSave = () => {
+
+  const handleSave = async () => {
     if (!isFaculty) return;
     
     if (isNewAssignment) {
-      // Create new assignment
-      dispatch(addAssignment({
-        title: formData.title,
-        course: cid,
-        description: formData.description,
-        points: formData.points,
-        dueDate: formData.dueDate,
-        availableDate: formData.availableDate,
-        ...(formData.availableUntil && { availableUntil: formData.availableUntil })
-      }));
+      const newAssignment = await assignmentsClient.createAssignment(cid, formData);
+      dispatch(addAssignment(newAssignment));
     } else if (assignment) {
-      // Update existing assignment
-      dispatch(updateAssignment({
+      const updatedAssignment = await assignmentsClient.updateAssignment({
         ...assignment,
-        title: formData.title,
-        description: formData.description,
-        points: formData.points,
-        dueDate: formData.dueDate,
-        availableDate: formData.availableDate,
-        ...(formData.availableUntil && { availableUntil: formData.availableUntil })
-      }));
+        ...formData,
+      });
+      dispatch(updateAssignment(updatedAssignment));
     }
     router.push(`/Courses/${cid}/Assignments`);
   };
-  
-  // Check faculty access first
+
+  const handleCancel = () => {
+    router.push(`/Courses/${cid}/Assignments`);
+  };
+
   if (!isFaculty) {
     return (
-      <div className="container-fluid">
-        <div className="alert alert-warning">
-          <h4>Access Denied</h4>
-          <p>Only faculty members can edit assignments.</p>
-          <Link href={`/Courses/${cid}/Assignments`} className="btn btn-primary">
-            Back to Assignments
-          </Link>
-        </div>
+      <div id="wd-assignments-editor" className="p-3">
+        <Alert variant="danger">
+          You do not have permission to edit assignments.
+        </Alert>
       </div>
     );
   }
 
-  // Check if assignment not found (but allow new assignments)
   if (!isNewAssignment && !assignment) {
     return (
-      <div className="container-fluid">
-        <div className="alert alert-danger">
-          <h4>Assignment Not Found</h4>
-          <p>The assignment you&apos;re looking for doesn&apos;t exist.</p>
-          <Link href={`/Courses/${cid}/Assignments`} className="btn btn-primary">
-            Back to Assignments
-          </Link>
-        </div>
+      <div id="wd-assignments-editor" className="p-3">
+        <Alert variant="warning">
+          Assignment not found.
+        </Alert>
       </div>
     );
   }
 
   return (
-    <div id="wd-assignments-editor" className="container-fluid">
-      <div className="mb-3">
-        <Form.Label htmlFor="wd-name">Assignment Name</Form.Label>
-        <Form.Control 
-          id="wd-name" 
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-        />
-      </div>
+    <div id="wd-assignments-editor" className="p-3">
+      <Form>
+        <Form.Group className="mb-3">
+          <Form.Label htmlFor="wd-name">Assignment Name</Form.Label>
+          <Form.Control
+            id="wd-name"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          />
+        </Form.Group>
 
-      <div className="mb-3">
-        <Form.Control 
-          as="textarea" 
-          id="wd-description" 
-          rows={10}
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-        />
-      </div>
+        <Form.Group className="mb-3">
+          <Form.Label htmlFor="wd-description">Description</Form.Label>
+          <Form.Control
+            as="textarea"
+            id="wd-description"
+            rows={5}
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          />
+        </Form.Group>
 
-      <Row className="mb-3">
-        <Form.Label column sm={3} className="text-end">
-          Points
-        </Form.Label>
-        <Col sm={9}>
-          <Form.Control 
-            id="wd-points" 
+        <Form.Group className="mb-3">
+          <Form.Label htmlFor="wd-points">Points</Form.Label>
+          <Form.Control
             type="number"
+            id="wd-points"
             value={formData.points}
             onChange={(e) => setFormData({ ...formData, points: parseInt(e.target.value) || 0 })}
           />
-        </Col>
-      </Row>
+        </Form.Group>
 
-      <Row className="mb-3">
-        <Form.Label column sm={3} className="text-end">
-          Assignment Group
-        </Form.Label>
-        <Col sm={9}>
-          <Form.Select id="wd-group" defaultValue="ASSIGNMENTS">
-            <option value="ASSIGNMENTS">ASSIGNMENTS</option>
-            <option value="QUIZZES">QUIZZES</option>
-            <option value="EXAMS">EXAMS</option>
-            <option value="PROJECT">PROJECT</option>
-          </Form.Select>
-        </Col>
-      </Row>
+        <Form.Group className="mb-3">
+          <Form.Label htmlFor="wd-due-date">Due Date</Form.Label>
+          <Form.Control
+            type="datetime-local"
+            id="wd-due-date"
+            value={formData.dueDate}
+            onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+          />
+        </Form.Group>
 
-      <Row className="mb-3">
-        <Form.Label column sm={3} className="text-end">
-          Display Grade as
-        </Form.Label>
-        <Col sm={9}>
-          <Form.Select id="wd-display-grade-as" defaultValue="Percentage">
-            <option value="Percentage">Percentage</option>
-            <option value="Points">Points</option>
-            <option value="Letter Grade">Letter Grade</option>
-            <option value="GPA Scale">GPA Scale</option>
-          </Form.Select>
-        </Col>
-      </Row>
+        <Form.Group className="mb-3">
+          <Form.Label htmlFor="wd-available-from">Available From</Form.Label>
+          <Form.Control
+            type="datetime-local"
+            id="wd-available-from"
+            value={formData.availableDate}
+            onChange={(e) => setFormData({ ...formData, availableDate: e.target.value })}
+          />
+        </Form.Group>
 
-      <Row className="mb-3">
-        <Form.Label column sm={3} className="text-end">
-          Submission Type
-        </Form.Label>
-        <Col sm={9}>
-          <div className="border p-3">
-            <Form.Select id="wd-submission-type" defaultValue="Online" className="mb-3">
-              <option value="Online">Online</option>
-              <option value="Paper">Paper</option>
-              <option value="External Tool">External Tool</option>
-            </Form.Select>
+        <Form.Group className="mb-3">
+          <Form.Label htmlFor="wd-available-until">Available Until</Form.Label>
+          <Form.Control
+            type="datetime-local"
+            id="wd-available-until"
+            value={formData.availableUntil}
+            onChange={(e) => setFormData({ ...formData, availableUntil: e.target.value })}
+          />
+        </Form.Group>
 
-            <div>
-              <strong>Online Entry Options</strong>
-              <Form.Check 
-                type="checkbox" 
-                id="wd-text-entry" 
-                label="Text Entry" 
-                className="mt-2"
-              />
-              <Form.Check 
-                type="checkbox" 
-                id="wd-website-url" 
-                label="Website URL" 
-                defaultChecked
-              />
-              <Form.Check 
-                type="checkbox" 
-                id="wd-media-recordings" 
-                label="Media Recordings" 
-              />
-              <Form.Check 
-                type="checkbox" 
-                id="wd-student-annotation" 
-                label="Student Annotation" 
-              />
-              <Form.Check 
-                type="checkbox" 
-                id="wd-file-upload" 
-                label="File Uploads" 
-              />
-            </div>
-          </div>
-        </Col>
-      </Row>
-
-      <Row className="mb-3">
-        <Form.Label column sm={3} className="text-end">
-          Assign
-        </Form.Label>
-        <Col sm={9}>
-          <div className="border p-3">
-            <div className="mb-3">
-              <Form.Label htmlFor="wd-assign-to" className="fw-bold">Assign to</Form.Label>
-              <div className="border p-2 bg-white">
-                <span className="badge bg-light text-dark border me-2">
-                  Everyone <button type="button" className="btn-close btn-close-sm ms-2" style={{ fontSize: "0.6rem" }}></button>
-                </span>
-              </div>
-            </div>
-
-            <div className="mb-3">
-              <Form.Label htmlFor="wd-due-date" className="fw-bold">Due</Form.Label>
-              <Form.Control 
-                type="datetime-local" 
-                id="wd-due-date" 
-                value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-              />
-            </div>
-
-            <Row>
-              <Col md={6}>
-                <div className="mb-3">
-                  <Form.Label htmlFor="wd-available-from" className="fw-bold">Available from</Form.Label>
-                  <Form.Control 
-                    type="datetime-local" 
-                    id="wd-available-from" 
-                    value={formData.availableDate}
-                    onChange={(e) => setFormData({ ...formData, availableDate: e.target.value })}
-                  />
-                </div>
-              </Col>
-              <Col md={6}>
-                <div className="mb-3">
-                  <Form.Label htmlFor="wd-available-until" className="fw-bold">Until</Form.Label>
-                  <Form.Control 
-                    type="datetime-local" 
-                    id="wd-available-until" 
-                    value={formData.availableUntil}
-                    onChange={(e) => setFormData({ ...formData, availableUntil: e.target.value })}
-                  />
-                </div>
-              </Col>
-            </Row>
-          </div>
-        </Col>
-      </Row>
-
-      <hr />
-      <div className="d-flex justify-content-end mt-3">
-        <Link href={`/Courses/${cid}/Assignments`} className="btn btn-secondary me-2">
-          Cancel
-        </Link>
-        <Button 
-          onClick={handleSave}
-          className="btn btn-danger"
-        >
-          Save
-        </Button>
-      </div>
+        <div className="d-flex justify-content-end gap-2">
+          <Button variant="secondary" onClick={handleCancel}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleSave}>
+            Save
+          </Button>
+        </div>
+      </Form>
     </div>
   );
 }
