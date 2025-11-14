@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSelector, useDispatch } from "react-redux";
 import { addAssignment } from "../../../../Assignments/reducer";
+import * as assignmentsClient from "../../client";
 
 interface RootState {
   accountReducer: {
@@ -51,19 +52,26 @@ export default function NewAssignmentEditor() {
     });
   }, []);
   
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!isFaculty) return;
     
-    // Create new assignment
-    dispatch(addAssignment({
-      title: formData.title,
-      course: cid as string,
-      description: formData.description,
-      points: formData.points,
-      dueDate: formData.dueDate,
-      availableDate: formData.availableDate
-    }));
-    router.push(`/Courses/${cid}/Assignments`);
+    try {
+      // Create new assignment on server
+      const newAssignment = await assignmentsClient.createAssignment(cid as string, {
+        title: formData.title,
+        description: formData.description,
+        points: formData.points,
+        dueDate: formData.dueDate,
+        availableDate: formData.availableDate,
+        availableUntil: formData.availableUntil
+      });
+      
+      // Add to Redux store
+      dispatch(addAssignment(newAssignment));
+      router.push(`/Courses/${cid}/Assignments`);
+    } catch (error) {
+      console.error("Failed to create assignment:", error);
+    }
   };
   
   if (!isFaculty) {
