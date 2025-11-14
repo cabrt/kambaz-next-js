@@ -13,8 +13,8 @@ export interface Assignment {
   description?: string;
   points?: number;
   dueDate?: string;
-  availableFromDate?: string;
-  availableUntilDate?: string;
+  availableDate?: string;
+  availableUntil?: string;
 }
 
 export const findAssignmentsForCourse = async (courseId: string) => {
