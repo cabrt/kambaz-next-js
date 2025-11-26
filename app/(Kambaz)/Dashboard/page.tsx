@@ -186,6 +186,11 @@ function DashboardContent() {
   
   const addNewCourse = async () => {
     try {
+      if (!courseClient.HTTP_SERVER) {
+        alert("Error: Server URL not configured. Please check environment variables.");
+        console.error("NEXT_PUBLIC_HTTP_SERVER is not set!");
+        return;
+      }
       const newCourse = await courseClient.createCourse(course);
       dispatch(addCourse(newCourse));
       // Also add to enrollments since server enrolled us
@@ -210,8 +215,33 @@ function DashboardContent() {
         image: "/images/reactjs.jpg",
         description: "New Description"
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Failed to create course:", error);
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as { 
+          response?: { 
+            status?: number; 
+            statusText?: string;
+            data?: unknown;
+            config?: { url?: string; method?: string };
+          };
+          config?: { url?: string; method?: string };
+        };
+        const requestUrl = axiosError.response?.config?.url || axiosError.config?.url;
+        console.error("Request URL:", requestUrl);
+        console.error("HTTP_SERVER:", courseClient.HTTP_SERVER);
+        console.error("Error status:", axiosError.response?.status);
+        console.error("Error statusText:", axiosError.response?.statusText);
+        console.error("Error data:", axiosError.response?.data);
+        
+        if (axiosError.response?.status === 404) {
+          alert(`Course creation failed: Endpoint not found (404). Check that your backend is running at ${courseClient.HTTP_SERVER || "N/A"}`);
+        } else {
+          alert(`Failed to create course: ${axiosError.response?.status || "Unknown error"}`);
+        }
+      } else {
+        alert("Failed to create course. Please check your connection and try again.");
+      }
     }
   };
   
