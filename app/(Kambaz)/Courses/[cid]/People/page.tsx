@@ -8,6 +8,7 @@ import { useParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import * as usersClient from "../../../Users/client";
 import * as enrollmentsClient from "../../../Enrollments/client";
+import PeopleDetails from "./Details";
 
 interface User {
   _id: string;
@@ -38,13 +39,15 @@ interface RootState {
 }
 
 export default function PeopleTable() {
-  const { cid } = useParams();
+  const params = useParams();
+  const cid = params?.cid as string | undefined;
   const { currentUser } = useSelector((state: RootState) => state.accountReducer);
   const [users, setUsers] = useState<User[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [error, setError] = useState<string>("");
   const [formData, setFormData] = useState({
     username: "",
@@ -233,6 +236,13 @@ export default function PeopleTable() {
 
   return (
     <div id="wd-people-table">
+      {selectedUserId && (
+        <PeopleDetails
+          userId={selectedUserId}
+          onClose={() => setSelectedUserId(null)}
+          onRefresh={fetchUsers}
+        />
+      )}
       {error && <Alert variant="danger" dismissible onClose={() => setError("")}>{error}</Alert>}
       
       {isFaculty && (
@@ -260,9 +270,15 @@ export default function PeopleTable() {
           {users.map((user) => (
             <tr key={user._id}>
               <td className="wd-full-name text-nowrap">
+                <span
+                  onClick={() => setSelectedUserId(user._id)}
+                  style={{ cursor: "pointer", color: "red" }}
+                  className="text-decoration-none"
+                >
                 <FaUserCircle className="me-2 fs-1 text-secondary" />
-                <span className="wd-first-name">{user.firstName}</span>{" "}
-                <span className="wd-last-name">{user.lastName}</span>
+                  <span className="wd-first-name text-danger">{user.firstName}</span>{" "}
+                  <span className="wd-last-name text-danger">{user.lastName}</span>
+                </span>
               </td>
               <td className="wd-login-id">{user.loginId}</td>
               <td className="wd-section">{user.section}</td>

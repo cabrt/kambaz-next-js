@@ -21,6 +21,8 @@ export default function AccountNavigation() {
   const { currentUser } = useSelector((state: RootState) => state.accountReducer);
   const links = currentUser ? ["Profile"] : ["Signin", "Signup"];
 
+  const active = (path: string) => (pathname.includes(path) ? "active" : "text-danger");
+
   return (
     <div id="wd-account-navigation" className="wd list-group fs-5 rounded-0">
       {links.map((link) => {
@@ -29,14 +31,20 @@ export default function AccountNavigation() {
           <Link
             key={href}
             href={href}
-            className={`list-group-item border-0 ${
-              pathname.includes(href) ? "active" : "text-danger"
-            }`}
+            className={`list-group-item border-0 ${active(href)}`}
           >
             {link}
           </Link>
         );
       })}
+      {currentUser && currentUser.role === "ADMIN" && (
+        <Link
+          href="/Account/Users"
+          className={`list-group-item border-0 ${active("Users")}`}
+        >
+          Users
+        </Link>
+      )}
     </div>
   );
 }
