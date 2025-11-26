@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Row, Col, Card, CardImg, CardBody, CardTitle, CardText, Button, FormControl } from "react-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
 import { addCourse, deleteCourse, updateCourse, setCourses } from "../Courses/reducer";
-import { enrollUserInCourse, unenrollUserFromCourse, setEnrollments } from "../Enrollments/reducer";
+import { enrollUserInCourse, setEnrollments } from "../Enrollments/reducer";
 import ProtectedRoute from "../Account/ProtectedRoute";
 import * as userClient from "../Account/client";
 import * as courseClient from "../Courses/client";
@@ -27,6 +27,7 @@ interface Course {
   credits?: number;
   description: string;
   image?: string;
+  enrolled?: boolean;
 }
 
 interface RootState {
@@ -64,21 +65,16 @@ function DashboardContent() {
     description: "New Description"
   });
   
-  const [showAllCourses, setShowAllCourses] = useState(false);
+  const [enrolling, setEnrolling] = useState<boolean>(false);
   
-  const isFaculty = currentUser?.role === "FACULTY";
+  const isFaculty = currentUser?.role === "FACULTY" || currentUser?.role === "ADMIN";
   
-  const fetchCourses = useCallback(async () => {
+  const findCoursesForUser = useCallback(async () => {
+    if (!currentUser) return;
     try {
-      if (showAllCourses) {
-        const courses = await courseClient.fetchAllCourses();
-        dispatch(setCourses(courses));
-      } else {
-        const courses = await userClient.findMyCourses();
-        dispatch(setCourses(courses));
-      }
+      const courses = await userClient.findCoursesForUser(currentUser._id);
+      dispatch(setCourses(courses));
     } catch (error: unknown) {
-      // 401 is expected when no user is logged in, handle silently
       if (error && typeof error === "object" && "response" in error) {
         const axiosError = error as { response?: { status?: number } };
         if (axiosError.response?.status !== 401) {
@@ -87,10 +83,35 @@ function DashboardContent() {
       } else {
         console.error(error);
       }
-      // Set courses to empty array if fetch fails
       dispatch(setCourses([]));
     }
-  }, [showAllCourses, dispatch]);
+  }, [currentUser, dispatch]);
+
+  const fetchCourses = useCallback(async () => {
+    if (!currentUser) return;
+    try {
+      const allCourses = await courseClient.fetchAllCourses();
+      const enrolledCourses = await userClient.findCoursesForUser(currentUser._id);
+      const courses = allCourses.map((course: Course) => {
+        if (enrolledCourses.find((c: Course) => c._id === course._id)) {
+          return { ...course, enrolled: true };
+        } else {
+          return course;
+        }
+      });
+      dispatch(setCourses(courses));
+    } catch (error: unknown) {
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as { response?: { status?: number } };
+        if (axiosError.response?.status !== 401) {
+          console.error(error);
+        }
+      } else {
+        console.error(error);
+      }
+      dispatch(setCourses([]));
+    }
+  }, [currentUser, dispatch]);
 
   const fetchEnrollments = useCallback(async () => {
     try {
@@ -113,10 +134,14 @@ function DashboardContent() {
   
   useEffect(() => {
     if (currentUser) {
-      fetchCourses();
+      if (enrolling) {
+        fetchCourses();
+      } else {
+        findCoursesForUser();
+      }
       fetchEnrollments();
     }
-  }, [currentUser, fetchCourses, fetchEnrollments]);
+  }, [currentUser, enrolling, fetchCourses, findCoursesForUser, fetchEnrollments]);
   
   const isEnrolled = (courseId: string) => {
     if (!currentUser) return false;
@@ -125,61 +150,56 @@ function DashboardContent() {
     );
   };
   
-  const handleEnroll = async (courseId: string) => {
-    if (currentUser) {
-      try {
-        // Optimistically update UI
-        dispatch(enrollUserInCourse({ userId: currentUser._id, courseId }));
-        
-        // Save to server
-        await enrollmentClient.enrollUserInCourse(currentUser._id, courseId);
-        
-        // Refresh data from server to ensure consistency
-        await fetchEnrollments();
-        if (!showAllCourses) {
-          await fetchCourses();
-        }
-      } catch (error) {
-        console.error("Failed to enroll:", error);
-        // Revert optimistic update on error
-        dispatch(unenrollUserFromCourse({ userId: currentUser._id, courseId }));
+  const updateEnrollment = async (courseId: string, enrolled: boolean) => {
+    if (!currentUser) return;
+    try {
+      if (enrolled) {
+        await userClient.enrollIntoCourse(currentUser._id, courseId);
+      } else {
+        await userClient.unenrollFromCourse(currentUser._id, courseId);
       }
-    }
-  };
-  
-  const handleUnenroll = async (courseId: string) => {
-    if (currentUser) {
-      try {
-        // Optimistically update UI
-        dispatch(unenrollUserFromCourse({ userId: currentUser._id, courseId }));
-        
-        // Save to server
-        await enrollmentClient.unenrollUserFromCourse(currentUser._id, courseId);
-        
-        // Refresh data from server to ensure consistency
-        await fetchEnrollments();
-        if (!showAllCourses) {
-          await fetchCourses();
-        }
-      } catch (error) {
-        console.error("Failed to unenroll:", error);
-        // Revert optimistic update on error
-        dispatch(enrollUserInCourse({ userId: currentUser._id, courseId }));
+      
+      // Update local state
+      dispatch(setCourses(
+        courses.map((course) => {
+          if (course._id === courseId) {
+            return { ...course, enrolled: enrolled };
+          } else {
+            return course;
+          }
+        })
+      ));
+      
+      // Refresh enrollments
+      await fetchEnrollments();
+      
+      // Refresh courses if in enrolling mode
+      if (enrolling) {
+        await fetchCourses();
+      } else {
+        await findCoursesForUser();
       }
+    } catch (error) {
+      console.error("Failed to update enrollment:", error);
     }
   };
   
   const addNewCourse = async () => {
     try {
-      const newCourse = await userClient.createCourse(course);
+      const newCourse = await courseClient.createCourse(course);
       dispatch(addCourse(newCourse));
       // Also add to enrollments since server enrolled us
       if (currentUser) {
         dispatch(enrollUserInCourse({ userId: currentUser._id, courseId: newCourse._id }));
       }
-      // Refresh courses and enrollments from server
+      // Refresh enrollments from server
       await fetchEnrollments();
-      await fetchCourses();
+      // Refresh courses based on current view
+      if (enrolling) {
+        await fetchCourses();
+      } else {
+        await findCoursesForUser();
+      }
       // Reset form
       setCourse({
         _id: "0",
@@ -218,10 +238,7 @@ function DashboardContent() {
     }
   };
   
-  // Filter courses based on showAllCourses toggle
-  // When showAllCourses is false, we show enrolled courses (which is what the server returns)
-  // When showAllCourses is true, we need to fetch all courses
-  const filteredCourses = courses;
+  const filteredCourses = courses || [];
 
   return (
     <div id="wd-dashboard">
@@ -229,10 +246,10 @@ function DashboardContent() {
         <h1 id="wd-dashboard-title">Dashboard</h1>
         <Button 
           variant="primary" 
-          onClick={() => setShowAllCourses(!showAllCourses)}
-          className="mb-2"
+          onClick={() => setEnrolling(!enrolling)}
+          className="mb-2 float-end"
         >
-          {showAllCourses ? "My Courses" : "Enrollments"}
+          {enrolling ? "My Courses" : "All Courses"}
         </Button>
       </div>
       <hr />
@@ -263,7 +280,7 @@ function DashboardContent() {
         </>
       )}
       <h2 id="wd-dashboard-published">
-        {showAllCourses ? "All Courses" : "Published Courses"} ({filteredCourses.length})
+        {enrolling ? "All Courses" : "Published Courses"} ({filteredCourses.length})
       </h2> 
       <hr />
       <div id="wd-dashboard-courses">
@@ -276,7 +293,19 @@ function DashboardContent() {
                   <CardImg src={course.image || "/images/reactjs.jpg"} variant="top" width="100%" height={160} />
                   <CardBody className="card-body">
                     <CardTitle className="wd-dashboard-course-title text-nowrap overflow-hidden">
-                      {course.name} </CardTitle>
+                      {enrolling && (
+                        <Button 
+                          className={`btn ${course.enrolled ? "btn-danger" : "btn-success"} float-end`}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            updateEnrollment(course._id, !course.enrolled);
+                          }}
+                        >
+                          {course.enrolled ? "Unenroll" : "Enroll"}
+                        </Button>
+                      )}
+                      {course.name}
+                    </CardTitle>
                     <CardText className="wd-dashboard-course-description overflow-hidden" style={{ height: "100px" }}>
                       {course.description} </CardText>
                   </CardBody>
@@ -320,34 +349,6 @@ function DashboardContent() {
                     )}
                   </div>
                   
-                  {/* Enrollment buttons */}
-                  {showAllCourses && (
-                    <div className="d-flex justify-content-center">
-                      {isEnrolled(course._id) ? (
-                        <Button 
-                          variant="danger" 
-                          className="w-100"
-                          onClick={(event) => {
-                            event.preventDefault();
-                            handleUnenroll(course._id);
-                          }}
-                        >
-                          Unenroll
-                        </Button>
-                      ) : (
-                        <Button 
-                          variant="success" 
-                          className="w-100"
-                          onClick={(event) => {
-                            event.preventDefault();
-                            handleEnroll(course._id);
-                          }}
-                        >
-                          Enroll
-                        </Button>
-                      )}
-                    </div>
-                  )}
                 </CardBody>
               </Card>
             </Col>

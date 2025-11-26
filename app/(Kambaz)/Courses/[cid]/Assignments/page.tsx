@@ -68,6 +68,8 @@ export default function Assignments() {
       dispatch(deleteAssignment(assignmentToDelete));
       setShowDeleteDialog(false);
       setAssignmentToDelete(null);
+      // Refresh assignments from server
+      await fetchAssignments();
     }
   };
 

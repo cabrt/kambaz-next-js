@@ -7,6 +7,7 @@ import { FaPencil } from "react-icons/fa6";
 import { useParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import * as usersClient from "../../../Users/client";
+import * as courseClient from "../../client";
 import * as enrollmentsClient from "../../../Enrollments/client";
 import PeopleDetails from "./Details";
 
@@ -65,7 +66,7 @@ export default function PeopleTable() {
 
   const fetchUsers = useCallback(async () => {
     try {
-      const fetchedUsers = await usersClient.findUsersForCourse(cid as string);
+      const fetchedUsers = await courseClient.findUsersForCourse(cid as string);
       setUsers(fetchedUsers);
       setError("");
     } catch (error: unknown) {

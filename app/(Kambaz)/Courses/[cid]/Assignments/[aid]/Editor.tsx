@@ -41,13 +41,27 @@ export default function AssignmentEditor() {
   const router = useRouter();
   const dispatch = useDispatch();
   
-  const { assignments } = useSelector((state: RootState) => state.assignmentsReducer);
   const { currentUser } = useSelector((state: RootState) => state.accountReducer);
 
   const isFaculty = currentUser?.role === "FACULTY";
   const isNewAssignment = aid === "new";
-  const assignment = isNewAssignment ? null : assignments.find((a: Assignment) => a._id === aid);
+  const [assignment, setAssignment] = useState<Assignment | null>(null);
+  const [loading, setLoading] = useState(!isNewAssignment);
 
+  // Format dates for datetime-local inputs
+  const formatDateForInput = (date: string | Date | undefined): string => {
+    if (!date) return "";
+    const d = typeof date === "string" ? new Date(date) : date;
+    if (isNaN(d.getTime())) return "";
+    // Convert to local datetime string in format YYYY-MM-DDTHH:mm
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+  
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -58,14 +72,31 @@ export default function AssignmentEditor() {
   });
 
   useEffect(() => {
+    const fetchAssignment = async () => {
+      if (!isNewAssignment && aid) {
+        try {
+          setLoading(true);
+          const fetchedAssignment = await assignmentsClient.findAssignmentById(aid);
+          setAssignment(fetchedAssignment);
+        } catch (error) {
+          console.error("Failed to fetch assignment:", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    fetchAssignment();
+  }, [aid, isNewAssignment]);
+
+  useEffect(() => {
     if (assignment) {
       setFormData({
         title: assignment.title,
-        description: assignment.description,
-        points: assignment.points,
-        dueDate: assignment.dueDate,
-        availableDate: assignment.availableDate,
-        availableUntil: assignment.availableUntil || ""
+        description: assignment.description || "",
+        points: assignment.points || 100,
+        dueDate: formatDateForInput(assignment.dueDate),
+        availableDate: formatDateForInput(assignment.availableDate),
+        availableUntil: formatDateForInput(assignment.availableUntil)
       });
     } else if (isNewAssignment) {
       const now = new Date();
@@ -84,17 +115,21 @@ export default function AssignmentEditor() {
   const handleSave = async () => {
     if (!isFaculty) return;
     
-    if (isNewAssignment) {
-      const newAssignment = await assignmentsClient.createAssignment(cid, formData);
-      dispatch(addAssignment(newAssignment));
-    } else if (assignment) {
-      const updatedAssignment = await assignmentsClient.updateAssignment({
-        ...assignment,
-        ...formData,
-      });
-      dispatch(updateAssignment(updatedAssignment));
+    try {
+      if (isNewAssignment) {
+        const newAssignment = await assignmentsClient.createAssignment(cid, formData);
+        dispatch(addAssignment(newAssignment));
+      } else if (assignment) {
+        const updatedAssignment = await assignmentsClient.updateAssignment({
+          ...assignment,
+          ...formData,
+        });
+        dispatch(updateAssignment(updatedAssignment));
+      }
+      router.push(`/Courses/${cid}/Assignments`);
+    } catch (error) {
+      console.error("Failed to save assignment:", error);
     }
-    router.push(`/Courses/${cid}/Assignments`);
   };
 
   const handleCancel = () => {
@@ -107,6 +142,14 @@ export default function AssignmentEditor() {
         <Alert variant="danger">
           You do not have permission to edit assignments.
         </Alert>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div id="wd-assignments-editor" className="p-3">
+        <Alert variant="info">Loading assignment...</Alert>
       </div>
     );
   }

@@ -46,7 +46,7 @@ const coursesSlice = createSlice({
       );
     },
     setCourses: (state, { payload: courses }) => {
-      state.courses = courses;
+      state.courses = Array.isArray(courses) ? courses : [];
     },
   },
 });
