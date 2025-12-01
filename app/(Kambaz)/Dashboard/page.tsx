@@ -73,7 +73,7 @@ function DashboardContent() {
     if (!currentUser) return;
     try {
       const courses = await userClient.findCoursesForUser(currentUser._id);
-      dispatch(setCourses(courses));
+        dispatch(setCourses(courses));
     } catch (error: unknown) {
       if (error && typeof error === "object" && "response" in error) {
         const axiosError = error as { response?: { status?: number } };
@@ -135,7 +135,7 @@ function DashboardContent() {
   useEffect(() => {
     if (currentUser) {
       if (enrolling) {
-        fetchCourses();
+      fetchCourses();
       } else {
         findCoursesForUser();
       }
@@ -152,7 +152,7 @@ function DashboardContent() {
   
   const updateEnrollment = async (courseId: string, enrolled: boolean) => {
     if (!currentUser) return;
-    try {
+      try {
       if (enrolled) {
         await userClient.enrollIntoCourse(currentUser._id, courseId);
       } else {
@@ -169,17 +169,17 @@ function DashboardContent() {
           }
         })
       ));
-      
+        
       // Refresh enrollments
       await fetchEnrollments();
-      
+        
       // Refresh courses if in enrolling mode
       if (enrolling) {
-        await fetchCourses();
+          await fetchCourses();
       } else {
         await findCoursesForUser();
-      }
-    } catch (error) {
+        }
+      } catch (error) {
       console.error("Failed to update enrollment:", error);
     }
   };
@@ -201,7 +201,7 @@ function DashboardContent() {
       await fetchEnrollments();
       // Refresh courses based on current view
       if (enrolling) {
-        await fetchCourses();
+      await fetchCourses();
       } else {
         await findCoursesForUser();
       }
@@ -249,9 +249,14 @@ function DashboardContent() {
     try {
       await courseClient.deleteCourse(courseId);
       dispatch(deleteCourse(courseId));
-      // Refresh enrollments and courses from server
+      // Refresh enrollments from server
       await fetchEnrollments();
-      await fetchCourses();
+      // Refresh courses based on current view
+      if (enrolling) {
+        await fetchCourses();
+      } else {
+        await findCoursesForUser();
+      }
     } catch (error) {
       console.error("Failed to delete course:", error);
     }
@@ -259,16 +264,31 @@ function DashboardContent() {
   
   const handleUpdateCourse = async () => {
     try {
-      await courseClient.updateCourse(course);
-      dispatch(updateCourse(course));
-      // Refresh courses from server
-      await fetchCourses();
+      if (!course._id || course._id === "0") {
+        console.error("Cannot update course: invalid course ID");
+        return;
+      }
+      console.log("Updating course with data:", course);
+      const updatedCourse = await courseClient.updateCourse(course);
+      console.log("Updated course response:", updatedCourse);
+      if (updatedCourse && updatedCourse._id) {
+        dispatch(updateCourse(updatedCourse));
+      } else {
+        // If response is invalid, use the local course data
+        dispatch(updateCourse(course));
+      }
+      // Refresh courses based on current view
+      if (enrolling) {
+        await fetchCourses();
+      } else {
+        await findCoursesForUser();
+      }
     } catch (error) {
       console.error("Failed to update course:", error);
     }
   };
   
-  const filteredCourses = courses || [];
+  const filteredCourses = (courses || []).filter((course): course is Course => course !== null && course !== undefined && course._id !== undefined);
 
   return (
     <div id="wd-dashboard">

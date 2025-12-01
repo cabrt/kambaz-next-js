@@ -61,7 +61,7 @@ export default function AssignmentEditor() {
     const minutes = String(d.getMinutes()).padStart(2, "0");
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
-  
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -116,17 +116,17 @@ export default function AssignmentEditor() {
     if (!isFaculty) return;
     
     try {
-      if (isNewAssignment) {
-        const newAssignment = await assignmentsClient.createAssignment(cid, formData);
-        dispatch(addAssignment(newAssignment));
-      } else if (assignment) {
-        const updatedAssignment = await assignmentsClient.updateAssignment({
-          ...assignment,
-          ...formData,
-        });
-        dispatch(updateAssignment(updatedAssignment));
-      }
-      router.push(`/Courses/${cid}/Assignments`);
+    if (isNewAssignment) {
+      const newAssignment = await assignmentsClient.createAssignment(cid, formData);
+      dispatch(addAssignment(newAssignment));
+    } else if (assignment) {
+      const updatedAssignment = await assignmentsClient.updateAssignment({
+        ...assignment,
+        ...formData,
+      });
+      dispatch(updateAssignment(updatedAssignment));
+    }
+    router.push(`/Courses/${cid}/Assignments`);
     } catch (error) {
       console.error("Failed to save assignment:", error);
     }

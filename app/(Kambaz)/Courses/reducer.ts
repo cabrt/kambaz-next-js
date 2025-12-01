@@ -41,12 +41,18 @@ const coursesSlice = createSlice({
       );
     },
     updateCourse: (state, { payload: course }) => {
+      if (!course || !course._id) {
+        return; // Don't update if course is null/undefined or missing _id
+      }
       state.courses = state.courses.map((c: Course) =>
         c._id === course._id ? course : c
       );
     },
     setCourses: (state, { payload: courses }) => {
-      state.courses = Array.isArray(courses) ? courses : [];
+      // Filter out null/undefined courses and ensure they have _id
+      state.courses = Array.isArray(courses) 
+        ? courses.filter((c): c is Course => c !== null && c !== undefined && c._id !== undefined)
+        : [];
     },
   },
 });
