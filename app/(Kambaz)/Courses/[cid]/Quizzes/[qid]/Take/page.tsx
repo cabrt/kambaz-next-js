@@ -199,28 +199,42 @@ export default function QuizTake() {
         </Button>
       </div>
 
-      <QuizTaking
-        quiz={quiz as quizzesClient.Quiz & { [key: string]: unknown }}
-        questions={questions}
-        attempt={attempt}
-        onSubmit={handleSubmit}
-        isPreview={false}
-      />
-
-      {isSubmitted && canRetake && (
-        <div className="mt-3">
-          <Alert variant="info" className="mb-3">
-            You have {submittedAttempts.length} of {maxAttempts} attempt(s) completed.
-          </Alert>
-          <Button variant="primary" onClick={handleStartQuiz}>
-            Take Quiz Again
-          </Button>
-        </div>
+      {isSubmitted && canRetake ? (
+        <>
+          <QuizTaking
+            quiz={quiz as quizzesClient.Quiz & { [key: string]: unknown }}
+            questions={questions}
+            attempt={attempt}
+            onSubmit={handleSubmit}
+            isPreview={false}
+            showAllQuestions={true}
+            previousAttempt={attempt}
+          />
+          <div className="mt-3">
+            <Alert variant="info" className="mb-3">
+              You have {submittedAttempts.length} of {maxAttempts} attempt(s) completed.
+            </Alert>
+            <Button variant="primary" onClick={handleStartQuiz}>
+              Take Quiz Again
+            </Button>
+          </div>
+        </>
+      ) : (
+        <QuizTaking
+          quiz={quiz as quizzesClient.Quiz & { [key: string]: unknown }}
+          questions={questions}
+          attempt={attempt}
+          onSubmit={handleSubmit}
+          isPreview={false}
+        />
       )}
+
       {isSubmitted && hasReachedMaxAttempts && (
-        <Alert variant="warning" className="mt-3">
-          You have reached the maximum number of attempts ({maxAttempts}) for this quiz.
-        </Alert>
+        <div className="mt-3">
+          <Alert variant="warning">
+            You have reached the maximum number of attempts ({maxAttempts}) for this quiz.
+          </Alert>
+        </div>
       )}
     </div>
   );
