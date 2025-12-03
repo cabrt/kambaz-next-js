@@ -227,7 +227,7 @@ export default function Quizzes() {
               {isQuizzesExpanded ? "▾" : "▸"}
             </span>
             <strong>Assignment Quizzes</strong>
-          </div>
+      </div>
         </ListGroupItem>
       </ListGroup>
 
@@ -238,36 +238,36 @@ export default function Quizzes() {
             const visibleQuizzes = isFaculty ? quizzes : quizzes.filter(quiz => quiz.published);
             
             return visibleQuizzes.length === 0 ? (
-              <div className="text-center p-5">
-                <p>No quizzes yet. {isFaculty && "Click the + Quiz button to create a new quiz."}</p>
-              </div>
-            ) : (
-              <ListGroup id="wd-quizzes-list" className="rounded-0">
+        <div className="text-center p-5">
+          <p>No quizzes yet. {isFaculty && "Click the + Quiz button to create a new quiz."}</p>
+        </div>
+      ) : (
+        <ListGroup id="wd-quizzes-list" className="rounded-0">
                 {visibleQuizzes.map((quiz) => (
                 <ListGroupItem key={quiz._id} className="wd-quiz-item p-0 border-start-0 border-end-0">
-                  <div className="d-flex align-items-center position-relative">
-                    {/* Green bar on the left */}
-                    <div 
+              <div className="d-flex align-items-center position-relative">
+                {/* Green bar on the left */}
+                <div 
                       className="bg-success" 
-                      style={{ 
+                  style={{ 
                         width: "5px", 
-                        height: "100%", 
+                    height: "100%", 
                         position: "absolute",
                         left: 0,
                         top: 0,
                         bottom: 0
-                      }} 
-                    />
+                  }} 
+                />
                     <div className="d-flex align-items-center flex-grow-1 py-3 ps-4">
                       <BsGripVertical className="me-2 fs-3" />
                       <FaRocket className="me-3 text-success" />
                       <div className="flex-grow-1">
-                        <Link
-                          href={`/Courses/${cid}/Quizzes/${quiz._id}`}
+                    <Link
+                      href={`/Courses/${cid}/Quizzes/${quiz._id}`}
                           className="wd-quiz-link text-decoration-none text-dark fw-bold"
-                        >
-                          {quiz.title}
-                        </Link>
+                    >
+                      {quiz.title}
+                    </Link>
                         <div className="text-muted mt-1">
                           <strong>Availability:</strong> {getAvailabilityStatus(quiz)}
                           {" | "}
@@ -282,12 +282,12 @@ export default function Quizzes() {
                               <strong>Score:</strong> {quizScores[quiz._id].score} / {quizScores[quiz._id].totalPoints}
                             </>
                           )}
-                        </div>
-                      </div>
+                    </div>
+                  </div>
                       {/* Green checkmark on the right */}
-                      <div className="d-flex align-items-center me-3">
-                        {isFaculty ? (
-                          <span
+                <div className="d-flex align-items-center me-3">
+                  {isFaculty ? (
+                    <span
                             style={{ 
                               cursor: "pointer",
                               width: "24px",
@@ -299,18 +299,18 @@ export default function Quizzes() {
                               backgroundColor: quiz.published ? "#28a745" : "rgba(40, 167, 69, 0.3)",
                               transition: "background-color 0.2s"
                             }}
-                            onClick={() => handlePublish(quiz)}
-                            title={quiz.published ? "Click to unpublish" : "Click to publish"}
-                          >
-                            <FaCheck 
+                      onClick={() => handlePublish(quiz)}
+                      title={quiz.published ? "Click to unpublish" : "Click to publish"}
+                    >
+                      <FaCheck 
                               className="text-white" 
                               style={{ fontSize: "12px" }} 
-                            />
-                          </span>
-                        ) : (
+                      />
+                    </span>
+                  ) : (
                           quiz.published && (
                             <span
-                              style={{ 
+                      style={{ 
                                 width: "24px",
                                 height: "24px",
                                 display: "flex",
@@ -323,26 +323,26 @@ export default function Quizzes() {
                               <FaCheck 
                                 className="text-white" 
                                 style={{ fontSize: "12px" }} 
-                              />
+                    />
                             </span>
                           )
-                        )}
-                      </div>
+                  )}
+                </div>
                       {/* Three-dot menu */}
-                      {isFaculty && (
+                {isFaculty && (
                         <div className="d-flex align-items-center position-relative me-3">
-                          <button
+                    <button
                             className="btn btn-link p-1"
                             style={{ color: "#666", border: "none", background: "none" }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowContextMenu(showContextMenu === quiz._id ? null : quiz._id);
-                            }}
-                          >
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowContextMenu(showContextMenu === quiz._id ? null : quiz._id);
+                      }}
+                    >
                             <FaEllipsisV style={{ fontSize: "16px" }} />
-                          </button>
-                          {showContextMenu === quiz._id && (
-                            <div 
+                    </button>
+                    {showContextMenu === quiz._id && (
+                      <div 
                               className="position-absolute bg-white border rounded shadow-sm" 
                               style={{ 
                                 zIndex: 1000, 
@@ -351,38 +351,38 @@ export default function Quizzes() {
                                 right: 0,
                                 marginTop: "5px"
                               }}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <button
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
                                 className="dropdown-item d-block w-100 text-start px-3 py-2 border-0 bg-transparent"
                                 style={{ fontSize: "14px" }}
-                                onClick={() => handleEdit(quiz._id)}
-                              >
+                          onClick={() => handleEdit(quiz._id)}
+                        >
                                 <FaPencil className="me-2" style={{ fontSize: "12px" }} /> Edit
-                              </button>
-                              <button
+                        </button>
+                        <button
                                 className="dropdown-item d-block w-100 text-start px-3 py-2 border-0 bg-transparent"
                                 style={{ fontSize: "14px" }}
-                                onClick={() => handlePublish(quiz)}
-                              >
-                                {quiz.published ? "Unpublish" : "Publish"}
-                              </button>
-                              <button
+                          onClick={() => handlePublish(quiz)}
+                        >
+                          {quiz.published ? "Unpublish" : "Publish"}
+                        </button>
+                        <button
                                 className="dropdown-item d-block w-100 text-start px-3 py-2 border-0 bg-transparent text-danger"
                                 style={{ fontSize: "14px" }}
-                                onClick={() => handleDeleteClick(quiz._id)}
-                              >
+                          onClick={() => handleDeleteClick(quiz._id)}
+                        >
                                 <FaTrash className="me-2" style={{ fontSize: "12px" }} /> Delete
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                        </button>
+                      </div>
+                    )}
                   </div>
-                </ListGroupItem>
-                ))}
-              </ListGroup>
+                )}
+                    </div>
+              </div>
+            </ListGroupItem>
+          ))}
+        </ListGroup>
             );
           })()}
         </>

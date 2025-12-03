@@ -220,19 +220,19 @@ export default function QuizDetails() {
                   </>
                 ) : (
                   <>
-                    <p className="mb-4">Ready to take this quiz?</p>
+          <p className="mb-4">Ready to take this quiz?</p>
                     {hasAttempts && (
                       <p className="text-muted mb-3">
                         You have {submittedAttempts.length} of {maxAttempts} attempt(s) completed.
                       </p>
                     )}
-                    <Button 
-                      variant="danger" 
-                      size="lg" 
-                      onClick={() => router.push(`/Courses/${cid}/Quizzes/${qid}/Take`)}
-                    >
+          <Button 
+            variant="danger" 
+            size="lg" 
+            onClick={() => router.push(`/Courses/${cid}/Quizzes/${qid}/Take`)}
+          >
                       {hasAttempts ? "Retake Quiz" : "Start Quiz"}
-                    </Button>
+          </Button>
                   </>
                 )}
               </>

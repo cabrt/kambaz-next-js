@@ -89,7 +89,7 @@ export default function QuizTake() {
       if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as { response?: { status?: number } };
         if (axiosError.response?.status === 403) {
-          setError("Maximum attempts reached. You cannot take this quiz again.");
+        setError("Maximum attempts reached. You cannot take this quiz again.");
         } else {
           setError("Failed to start quiz");
         }
@@ -182,9 +182,9 @@ export default function QuizTake() {
             You have reached the maximum number of attempts ({maxAttempts}) for this quiz.
           </Alert>
         ) : (
-          <Button variant="danger" size="lg" onClick={handleStartQuiz} className="mt-3">
-            Start Quiz
-          </Button>
+        <Button variant="danger" size="lg" onClick={handleStartQuiz} className="mt-3">
+          Start Quiz
+        </Button>
         )}
       </div>
     );

@@ -40,7 +40,7 @@ export const findLatestAttempt = async (quizId: string): Promise<QuizAttempt | n
     if (error && typeof error === 'object' && 'response' in error) {
       const axiosError = error as { response?: { status?: number } };
       if (axiosError.response?.status === 404) {
-        return null;
+      return null;
       }
     }
     throw error;
