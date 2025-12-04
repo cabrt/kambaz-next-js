@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Form, Button } from "react-bootstrap";
 import { Question } from "./client";
+import RichTextEditor from "../../../../../../components/RichTextEditor";
 
 interface TrueFalseEditorProps {
   question: Question;
@@ -55,18 +56,14 @@ export default function TrueFalseEditor({ question, onSave, onCancel }: TrueFals
         Enter your question text, then select if True or False is the correct answer.
       </p>
 
-      <Form.Group className="mb-3">
+      <Form.Group className="mb-5">
         <Form.Label><strong>Question:</strong></Form.Label>
-        <Form.Control
-          as="textarea"
-          rows={5}
+        <RichTextEditor
           value={questionText}
-          onChange={(e) => setQuestionText(e.target.value)}
+          onChange={setQuestionText}
           placeholder="Enter your question text here..."
+          height="150px"
         />
-        <Form.Text className="text-muted">
-          You can use HTML formatting in the question text.
-        </Form.Text>
       </Form.Group>
 
       <Form.Group className="mb-3">

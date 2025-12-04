@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Form, Button, Alert, Nav, Tab } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import * as quizzesClient from "../../client";
+import RichTextEditor from "../../../../../components/RichTextEditor";
 
 interface Quiz {
   _id: string;
@@ -269,14 +270,13 @@ export default function QuizEditor() {
                 />
               </Form.Group>
 
-        <Form.Group className="mb-3">
+        <Form.Group className="mb-5">
           <Form.Label htmlFor="wd-quiz-description">Description</Form.Label>
-          <Form.Control
-            as="textarea"
-            id="wd-quiz-description"
-            rows={5}
+          <RichTextEditor
             value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            onChange={(value) => setFormData({ ...formData, description: value })}
+            placeholder="Enter quiz description..."
+            height="200px"
           />
         </Form.Group>
 

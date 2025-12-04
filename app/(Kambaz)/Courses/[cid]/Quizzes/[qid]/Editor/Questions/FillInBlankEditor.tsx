@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Form, Button } from "react-bootstrap";
 import { FaTrash, FaCheck } from "react-icons/fa";
 import { Question } from "./client";
+import RichTextEditor from "../../../../../../components/RichTextEditor";
 
 interface FillInBlankEditorProps {
   question: Question;
@@ -82,17 +83,16 @@ export default function FillInBlankEditor({ question, onSave, onCancel }: FillIn
         Enter your question text, then define all possible correct answers for the blank. Students will see the question followed by a small text box to type their answer.
       </p>
 
-      <Form.Group className="mb-3">
+      <Form.Group className="mb-5">
         <Form.Label><strong>Question:</strong></Form.Label>
-        <Form.Control
-          as="textarea"
-          rows={5}
+        <RichTextEditor
           value={questionText}
-          onChange={(e) => setQuestionText(e.target.value)}
+          onChange={setQuestionText}
           placeholder="Enter your question text here. Use _______ to indicate the blank."
+          height="150px"
         />
-        <Form.Text className="text-muted">
-          You can use HTML formatting in the question text. Use underscores (_______) to indicate where the blank should be.
+        <Form.Text className="text-muted mt-2 d-block">
+          Use underscores (_______) to indicate where the blank should be.
         </Form.Text>
       </Form.Group>
 

@@ -12,7 +12,18 @@ interface Quiz {
   oneQuestionAtATime?: boolean;
   webcamRequired?: boolean;
   lockQuestionsAfterAnswering?: boolean;
+  shuffleAnswers?: boolean;
+  showCorrectAnswers?: string;
+  dueDate?: string;
   [key: string]: unknown;
+}
+
+// Shuffled choice mapping: maps original index to shuffled index
+interface ShuffledChoices {
+  [questionId: string]: {
+    shuffledOrder: number[]; // shuffledOrder[originalIndex] = displayIndex
+    originalOrder: number[]; // originalOrder[displayIndex] = originalIndex
+  };
 }
 
 interface QuizTakingProps {
@@ -31,6 +42,67 @@ export default function QuizTaking({ quiz, questions, attempt, onSubmit, showAll
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [webcamApproved, setWebcamApproved] = useState<boolean>(false);
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
+  const [shuffledChoices, setShuffledChoices] = useState<ShuffledChoices>({});
+
+  // Shuffle array using Fisher-Yates algorithm with a seed for consistency
+  const shuffleArray = (array: number[], seed: string): number[] => {
+    const shuffled = [...array];
+    // Simple hash function for seed
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      const char = seed.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    
+    // Fisher-Yates shuffle with seeded random
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      hash = ((hash * 1103515245) + 12345) & 0x7fffffff;
+      const j = hash % (i + 1);
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
+  // Initialize shuffled choices when questions or attempt changes
+  useEffect(() => {
+    if (quiz.shuffleAnswers !== false && questions.length > 0 && attempt?._id) {
+      const newShuffledChoices: ShuffledChoices = {};
+      questions.forEach(q => {
+        if (q.questionType === "Multiple Choice" && q.choices && q.choices.length > 0) {
+          const originalIndices = q.choices.map((_, i) => i);
+          const seed = `${q._id}-${attempt._id}`;
+          const shuffledOrder = shuffleArray(originalIndices, seed);
+          // Create reverse mapping
+          const originalOrder: number[] = new Array(shuffledOrder.length);
+          shuffledOrder.forEach((originalIdx, shuffledIdx) => {
+            originalOrder[shuffledIdx] = originalIdx;
+          });
+          newShuffledChoices[q._id] = { shuffledOrder, originalOrder };
+        }
+      });
+      setShuffledChoices(newShuffledChoices);
+    }
+  }, [quiz.shuffleAnswers, questions, attempt?._id]);
+
+  // Get shuffled choices for a question
+  const getShuffledChoices = (question: Question): string[] => {
+    if (!question.choices) return [];
+    if (quiz.shuffleAnswers === false || !shuffledChoices[question._id]) {
+      return question.choices;
+    }
+    const { originalOrder } = shuffledChoices[question._id];
+    return originalOrder.map(originalIdx => question.choices![originalIdx]);
+  };
+
+  // Convert display index to original index for storing answer
+  const displayToOriginalIndex = (questionId: string, displayIndex: number): number => {
+    if (quiz.shuffleAnswers === false || !shuffledChoices[questionId]) {
+      return displayIndex;
+    }
+    return shuffledChoices[questionId].originalOrder[displayIndex];
+  };
+
 
   useEffect(() => {
     // Use previousAttempt for review mode, otherwise use current attempt
@@ -170,8 +242,30 @@ export default function QuizTaking({ quiz, questions, attempt, onSubmit, showAll
   const isSubmitted = attempt?.submittedAt !== undefined;
   // Default to true if not specified (undefined means true)
   const oneQuestionAtATime = quiz.oneQuestionAtATime !== false;
-  // If lockQuestionsAfterAnswering is true, hide answers after submission
-  const showAnswers = !quiz.lockQuestionsAfterAnswering || !isSubmitted;
+  
+  // Determine if correct answers should be shown based on quiz settings
+  const shouldShowCorrectAnswers = (): boolean => {
+    if (!isSubmitted) return false;
+    
+    const showCorrectAnswersSetting = quiz.showCorrectAnswers || "Immediately";
+    
+    if (showCorrectAnswersSetting === "Never") {
+      return false;
+    }
+    
+    if (showCorrectAnswersSetting === "After Due Date") {
+      if (!quiz.dueDate) return true; // No due date, show immediately
+      const dueDate = new Date(quiz.dueDate);
+      const now = new Date();
+      return now > dueDate;
+    }
+    
+    // "Immediately" or any other value
+    return true;
+  };
+  
+  // Show answers only if showCorrectAnswers setting allows it
+  const showAnswers = shouldShowCorrectAnswers();
   
   // Show all questions if showAllQuestions is true (for review before retake) or if quiz is submitted
   const shouldShowAllQuestions = showAllQuestions || isSubmitted;
@@ -224,7 +318,7 @@ export default function QuizTaking({ quiz, questions, attempt, onSubmit, showAll
               Previous
             </Button>
             <Button
-              variant="primary"
+              variant="danger"
               onClick={handleNextQuestion}
               disabled={safeQuestionIndex === questions.length - 1}
             >
@@ -255,19 +349,25 @@ export default function QuizTaking({ quiz, questions, attempt, onSubmit, showAll
 
               {question.questionType === "Multiple Choice" && (
                 <div>
-                  {question.choices?.map((choice: string, choiceIndex: number) => (
-                    <Form.Check
-                      key={choiceIndex}
-                      type="radio"
-                      name={`question-${question._id}`}
-                      id={`question-${question._id}-choice-${choiceIndex}`}
-                      label={choice}
-                      checked={answers[question._id] === choiceIndex}
-                      onChange={() => handleAnswerChange(question._id, choiceIndex)}
-                      disabled={isSubmitted || (quiz.webcamRequired && !webcamApproved) || isQuestionLocked(question._id) || shouldShowAllQuestions}
-                      className={isSubmitted && showAnswers && displayAttempt?.answers.find(a => a.question === question._id && a.answer === choiceIndex)?.isCorrect ? "text-success" : ""}
-                    />
-                  ))}
+                  {getShuffledChoices(question).map((choice: string, displayIndex: number) => {
+                    const originalIndex = displayToOriginalIndex(question._id, displayIndex);
+                    const selectedOriginalIndex = answers[question._id] as number | undefined;
+                    const isSelected = selectedOriginalIndex === originalIndex;
+                    
+                    return (
+                      <Form.Check
+                        key={displayIndex}
+                        type="radio"
+                        name={`question-${question._id}`}
+                        id={`question-${question._id}-choice-${displayIndex}`}
+                        label={choice}
+                        checked={isSelected}
+                        onChange={() => handleAnswerChange(question._id, originalIndex)}
+                        disabled={isSubmitted || (quiz.webcamRequired && !webcamApproved) || isQuestionLocked(question._id) || shouldShowAllQuestions}
+                        className={isSubmitted && showAnswers && displayAttempt?.answers.find(a => a.question === question._id && a.answer === originalIndex)?.isCorrect ? "text-success" : ""}
+                      />
+                    );
+                  })}
                   {isSubmitted && displayAttempt && showAnswers && (
                     <div className="mt-2">
                       <small className="text-muted">

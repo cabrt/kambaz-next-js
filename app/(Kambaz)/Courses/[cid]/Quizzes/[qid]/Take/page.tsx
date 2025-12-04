@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Button, Alert } from "react-bootstrap";
+import { Button, Alert, Form, Modal } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import * as quizzesClient from "../../client";
 import * as questionsClient from "../Editor/Questions/client";
@@ -37,6 +37,9 @@ export default function QuizTake() {
   const [allAttempts, setAllAttempts] = useState<QuizAttempt[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showAccessCodeModal, setShowAccessCodeModal] = useState(false);
+  const [enteredAccessCode, setEnteredAccessCode] = useState("");
+  const [accessCodeError, setAccessCodeError] = useState("");
 
   const isFaculty = currentUser?.role === "FACULTY" || currentUser?.role === "ADMIN";
 
@@ -63,6 +66,30 @@ export default function QuizTake() {
     };
     fetchData();
   }, [qid, isFaculty]);
+
+  const handleStartQuizClick = () => {
+    // Check if quiz has an access code
+    if (!isFaculty && quiz?.accessCode && quiz.accessCode.trim() !== "") {
+      // Reset access code state for new attempt
+      setEnteredAccessCode("");
+      setAccessCodeError("");
+      setShowAccessCodeModal(true);
+      return;
+    }
+    handleStartQuiz();
+  };
+
+  const handleVerifyAccessCode = () => {
+    if (!quiz?.accessCode) return;
+    
+    if (enteredAccessCode === quiz.accessCode) {
+      setShowAccessCodeModal(false);
+      setAccessCodeError("");
+      handleStartQuiz();
+    } else {
+      setAccessCodeError("Incorrect access code. Please try again.");
+    }
+  };
 
   const handleStartQuiz = async () => {
     // Check if student has reached maximum attempts
@@ -177,12 +204,15 @@ export default function QuizTake() {
         <p><strong>Points:</strong> {quiz.points || 0}</p>
         <p><strong>Time Limit:</strong> {quiz.timeLimit || 20} minutes</p>
         <p><strong>Questions:</strong> {questions.length}</p>
+        {quiz.accessCode && quiz.accessCode.trim() !== "" && (
+          <p className="text-muted mt-2">This quiz requires an access code.</p>
+        )}
         {hasReachedMaxAttempts ? (
           <Alert variant="warning" className="mt-3">
             You have reached the maximum number of attempts ({maxAttempts}) for this quiz.
           </Alert>
         ) : (
-        <Button variant="danger" size="lg" onClick={handleStartQuiz} className="mt-3">
+        <Button variant="danger" size="lg" onClick={handleStartQuizClick} className="mt-3">
           Start Quiz
         </Button>
         )}
@@ -214,7 +244,7 @@ export default function QuizTake() {
             <Alert variant="info" className="mb-3">
               You have {submittedAttempts.length} of {maxAttempts} attempt(s) completed.
             </Alert>
-            <Button variant="primary" onClick={handleStartQuiz}>
+            <Button variant="danger" onClick={handleStartQuizClick}>
               Take Quiz Again
             </Button>
           </div>
@@ -236,6 +266,37 @@ export default function QuizTake() {
           </Alert>
         </div>
       )}
+
+      {/* Access Code Modal - Always available */}
+      <Modal show={showAccessCodeModal} onHide={() => setShowAccessCodeModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Enter Access Code</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>This quiz requires an access code to begin.</p>
+          <Form.Group>
+            <Form.Label>Access Code</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter access code"
+              value={enteredAccessCode}
+              onChange={(e) => setEnteredAccessCode(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleVerifyAccessCode()}
+            />
+            {accessCodeError && (
+              <Form.Text className="text-danger">{accessCodeError}</Form.Text>
+            )}
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowAccessCodeModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleVerifyAccessCode}>
+            Submit
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

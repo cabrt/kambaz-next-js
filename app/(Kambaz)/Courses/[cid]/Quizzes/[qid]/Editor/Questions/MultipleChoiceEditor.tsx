@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Form, Button } from "react-bootstrap";
 import { FaTrash, FaCheck } from "react-icons/fa";
 import { Question } from "./client";
+import RichTextEditor from "../../../../../../components/RichTextEditor";
 
 interface MultipleChoiceEditorProps {
   question: Question;
@@ -86,18 +87,14 @@ export default function MultipleChoiceEditor({ question, onSave, onCancel }: Mul
         Enter your question and multiple answers, then select the one correct answer.
       </p>
 
-      <Form.Group className="mb-3">
+      <Form.Group className="mb-5">
         <Form.Label><strong>Question:</strong></Form.Label>
-        <Form.Control
-          as="textarea"
-          rows={5}
+        <RichTextEditor
           value={questionText}
-          onChange={(e) => setQuestionText(e.target.value)}
+          onChange={setQuestionText}
           placeholder="Enter your question text here..."
+          height="150px"
         />
-        <Form.Text className="text-muted">
-          You can use HTML formatting in the question text.
-        </Form.Text>
       </Form.Group>
 
       <Form.Group className="mb-3">
